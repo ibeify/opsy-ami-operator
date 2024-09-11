@@ -31,8 +31,8 @@ theme:
 plugins:
   - search
   - glightbox
-  # - git-revision-date-localized:
-  #     enable_creation_date: true
+  - git-revision-date-localized:
+      enable_creation_date: true
 markdown_extensions:
   - admonition
   - abbr

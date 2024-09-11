@@ -1,9 +1,6 @@
 ## Design
-<div>
-<img src="assets/opsyami.svg" width="500%"/>
-</div>
 
-
+  ![Image title](assets/opsyami.svg)
 
 
 *Reconciliation based on Filtered Base AMI*
