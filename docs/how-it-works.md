@@ -1,6 +1,6 @@
 ## Design
 
-  ![Image title](assets/opsyami.svg)
+  ![Image title](assets/opsyami_small.svg)
 
 
 *Reconciliation based on Filtered Base AMI*
