@@ -1,0 +1,12 @@
+apiVersion: ami.opsy.dev/v1alpha1
+kind: PackerBuilder
+metadata:
+  labels:
+    app.kubernetes.io/name: packerbuilder
+    app.kubernetes.io/instance: packerbuilder-sample
+    app.kubernetes.io/part-of: opsy-ami-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: opsy-ami-operator
+  name: packerbuilder-sample
+spec:
+  # TODO(user): Add fields here

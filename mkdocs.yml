@@ -1,0 +1,125 @@
+site_name: Opsy the AMI Operator
+repo_name: ibeify/opsy-ami-operator
+repo_url: https://github.com/ibeify/opsy-ami-operator
+edit_uri: edit/main/docs/
+strict: true
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - content.code.select
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      toggle:
+        icon: material/lightbulb-on
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      toggle:
+        icon: material/lightbulb-off
+        name: Switch to light mode
+
+# ... rest of the configuration remains the same
+plugins:
+  - search
+  - glightbox
+  # - git-revision-date-localized:
+  #     enable_creation_date: true
+markdown_extensions:
+  - admonition
+  - abbr
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      # insert a blank space before the character
+      permalink: " ¶"
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - toc:
+      permalink: true
+  - admonition
+  - attr_list
+  - codehilite
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+extra_css:
+  - https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css
+extra_javascript:
+  - https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js
+
+extra:
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+  version:
+    provider: mike
+nav:
+  - Home:
+      - Welcome: index.md
+      - How It Works: how-it-works.md
+  - Deployment:
+      - Installation Guide: deployment.md
+      - CI/CD:
+          - Build Image: build-push-image.md
+          - Build Helm Chart: build-push-chart.md
+          - Deploy Helm Chart: deploy-chart.md
+
+  - Controllers:
+      - AMIRefresher: ami-refresher.md
+      - PackerBuilder: packer-builder.md
+  - Examples:
+      - PackerBuilder:
+          - Public Repository: packer-builder-public.md
+          - Private Repository: packer-builder-private.md
+          - AL2023 CIS LVL2: packer-builder-cis-lvl2-al-2023.md
+extra_css:
+  - stylesheets/extra.css
+

@@ -1,0 +1,27 @@
+# permissions for end users to view packerbuilders.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: packerbuilder-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: opsy-ami-operator
+    app.kubernetes.io/part-of: opsy-ami-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: packerbuilder-viewer-role
+rules:
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - packerbuilders
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - packerbuilders/status
+  verbs:
+  - get

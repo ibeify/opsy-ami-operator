@@ -1,0 +1,27 @@
+# permissions for end users to view amirefreshers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: amirefresher-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: opsy-ami-operator
+    app.kubernetes.io/part-of: opsy-ami-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: amirefresher-viewer-role
+rules:
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - amirefreshers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - amirefreshers/status
+  verbs:
+  - get

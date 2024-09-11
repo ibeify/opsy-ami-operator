@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: { { include "node-group-opsy-ami-operator.fullname" . } }
+  labels: { { - include "node-group-opsy-ami-operator.labels" . | nindent 4 } }
+spec:
+  replicas: { { .Values.replicaCount } }
+  selector:
+    matchLabels:
+      {
+        {
+          - include "node-group-opsy-ami-operator.selectorLabels" . | nindent 6,
+        },
+      }
+  template:
+    metadata:
+      labels:
+        {
+          {
+            - include "node-group-opsy-ami-operator.selectorLabels" . | nindent 8,
+          },
+        }
+      annotations: { { - toYaml .Values.podAnnotations | nindent 8 } }
+    spec:
+      serviceAccountName:
+        { { include "node-group-opsy-ami-operator.serviceAccountName" . } }
+      securityContext: { { - toYaml .Values.podSecurityContext | nindent 8 } }
+      containers:
+        - command:
+            - /manager
+          name: { { .Chart.Name } }
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: { { .Values.image.pullPolicy } }
+          ports:
+            - containerPort: 80
+          resources: { { - toYaml .Values.resources | nindent 12 } }
+      volumes:
+      nodeSelector: { { - toYaml .Values.nodeSelector | nindent 8 } }
+      tolerations: { { - toYaml .Values.tolerations | nindent 8 } }
+      affinity: { { - toYaml .Values.affinity | nindent 8 } }

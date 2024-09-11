@@ -1,0 +1,14 @@
+---
+- name: Apply CIS Hardening to Amazon Linux 2023
+  hosts: localhost
+  become: yes
+  roles:
+    - AMAZON2023-CIS
+
+  # https://github.com/ansible-lockdown/AMAZON2023-CIS/blob/devel/defaults/main.yml
+  vars:
+    setup_audit: true
+    run_audit: true
+    amzn2023cis_rule_1_2_2: false # Breaks patching    skip_reboot: false
+    amzn2023cis_rule_1_2_4: false # Breaks patching
+    amzn2023cis_rule_4_6_6: false # default image has no root password and nopasswd not removed from sudo

@@ -1,0 +1,78 @@
+name: Improved Vulnerability Scan
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  schedule:
+    - cron: "0 9 * * *"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  determine_versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get_versions.outputs.versions }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get versions
+        id: get_versions
+        run: |
+          VERSIONS=$(git tag --list 'v*.*.*' --sort=-version:refname | grep -v 'beta\|alpha' | head -n 3 | jq -R -s -c 'split("\n")[:-1]')
+          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+
+  scan:
+    needs: determine_versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ${{ fromJson(needs.determine_versions.outputs.versions) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "your-image-name:${{ matrix.version }}"
+          format: "sarif"
+          output: "trivy-results-${{ matrix.version }}.sarif"
+          severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+          vuln-type: "os,library"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: "trivy-results-${{ matrix.version }}.sarif"
+
+      - name: Summarize vulnerabilities
+        run: |
+          COUNT=$(jq '.runs[0].results | length' trivy-results-${{ matrix.version }}.sarif)
+          echo "Vulnerability scan summary for version ${{ matrix.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "Total vulnerabilities found: $COUNT" >> $GITHUB_STEP_SUMMARY
+
+  scan_repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "sarif"
+          output: "trivy-repo-results.sarif"
+          severity: "CRITICAL,HIGH"
+
+      - name: Upload Trivy repo scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: "trivy-repo-results.sarif"

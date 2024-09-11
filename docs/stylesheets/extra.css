@@ -1,0 +1,42 @@
+:root {
+    --md-primary-fg-color:        #183654;
+    --md-primary-fg-color--light: #2a456d; 
+    --md-primary-fg-color--dark:  #294774;
+  }
+
+
+  .grid.cards {
+    grid-template-columns: auto auto;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .grid-item {
+    margin-top: 0;
+    text-align: center;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .grid.cards {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+
+.image-wrapper img[src$='#only-light'] {
+  display: none;
+}
+
+.image-wrapper img[src$='#only-dark'] {
+  display: none;
+}
+
+[data-md-color-scheme="default"] .image-wrapper img[src$='#only-light'] {
+  display: block;
+}
+
+[data-md-color-scheme="slate"] .image-wrapper img[src$='#only-dark'] {
+  display: block;
+}
