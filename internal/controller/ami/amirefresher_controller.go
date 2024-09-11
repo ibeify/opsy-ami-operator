@@ -66,9 +66,9 @@ func (r *AMIRefresherReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, err
 		}
 
-		if err := r.Get(ctx, req.NamespacedName, &ar); err != nil {
-			return ctrl.Result{}, client.IgnoreNotFound(err)
-		}
+		// if err := r.Get(ctx, req.NamespacedName, &ar); err != nil {
+		// 	return ctrl.Result{}, client.IgnoreNotFound(err)
+		// }
 	}
 
 	if err := f.HandleFinalizer(ctx, &ar, r.Client, log); err != nil {
@@ -89,9 +89,9 @@ func (r *AMIRefresherReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, err
 		}
 
-		if err := r.Get(ctx, req.NamespacedName, &ar); err != nil {
-			return ctrl.Result{}, client.IgnoreNotFound(err)
-		}
+		// if err := r.Get(ctx, req.NamespacedName, &ar); err != nil {
+		// 	return ctrl.Result{}, client.IgnoreNotFound(err)
+		// }
 	}
 
 	am := amimanager.New(ctx, ar.Spec.Region, log)

@@ -108,11 +108,6 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 	pb.Status.LastRunMessage = message
 	pb.Status.LastRun = metav1.Now()
 
-	if err := r.Status.Update(ctx, pb); err != nil {
-		log.Error(err, "Failed to update PackerBuilder status")
-		return err
-	}
-
 	buildInfo := notifier.Message{
 		Name:           pb.Name,
 		LatestBaseAMI:  pb.Status.LastRunBaseImageID,
@@ -147,13 +142,20 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 		}
 	}
 
-	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-		return err
-	}
+	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+	// 	return err
+	// }
+
 	if err := r.OpsyRunner.SetState(pb.Status.BuildID, newState); err != nil {
 		log.Error(err, "Failed to transition state", "from", from, "to", newState)
 		return err
 	}
+
+	if err := r.Status.Update(ctx, pb); err != nil {
+		log.Error(err, "Failed to update PackerBuilder status")
+		return err
+	}
+
 	return nil
 }
 
