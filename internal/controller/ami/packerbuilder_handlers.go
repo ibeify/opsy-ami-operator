@@ -70,7 +70,7 @@ func (r *PackerBuilderReconciler) transitionToErrorState(ctx context.Context, pb
 	}
 
 	log.Info("Transitioned to Error state", "reason", reason)
-	return ctrl.Result{}, nil
+	return ctrl.Result{Requeue: true}, nil
 }
 
 func (r *PackerBuilderReconciler) setupJob(ctx context.Context, packer *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) error {
@@ -107,6 +107,10 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 	pb.Status.LastRunStatus = lastStatus
 	pb.Status.LastRunMessage = message
 	pb.Status.LastRun = metav1.Now()
+	if err := r.Status.Update(ctx, pb); err != nil {
+		log.Error(err, "Failed to update PackerBuilder status")
+		return err
+	}
 
 	buildInfo := notifier.Message{
 		Name:           pb.Name,
@@ -142,17 +146,12 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 		}
 	}
 
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	return err
-	// }
-
-	if err := r.OpsyRunner.SetState(pb.Status.BuildID, newState); err != nil {
-		log.Error(err, "Failed to transition state", "from", from, "to", newState)
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
 		return err
 	}
 
-	if err := r.Status.Update(ctx, pb); err != nil {
-		log.Error(err, "Failed to update PackerBuilder status")
+	if err := r.OpsyRunner.SetState(pb.Status.BuildID, newState); err != nil {
+		log.Error(err, "Failed to transition state", "from", from, "to", newState)
 		return err
 	}
 

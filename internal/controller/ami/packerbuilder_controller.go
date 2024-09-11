@@ -144,12 +144,16 @@ func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 func (r *PackerBuilderReconciler) catchRec(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
 	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
 
-	log.V(1).Info(fmt.Sprintf("Current State: %s", pb.Status.State))
-	if r.OpsyRunner.GetCurrentState(pb.Status.BuildID) != pb.Status.State {
-		if err := r.OpsyRunner.SetState(pb.Status.BuildID, pb.Status.State); err != nil {
-			return ctrl.Result{}, err
-		}
+	// if r.OpsyRunner.GetCurrentState(pb.Status.BuildID) != pb.Status.State {
+	// 	if err := r.OpsyRunner.SetState(pb.Status.BuildID, pb.Status.State); err != nil {
+	// 		return ctrl.Result{}, err
+	// 	}
+	// }
+
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		return r.transitionToErrorState(ctx, pb, "Failed to get PackerBuilder", log)
 	}
+	log.V(1).Info(fmt.Sprintf("Current State: %s", pb.Status.State))
 
 	switch r.OpsyRunner.GetCurrentState(pb.Status.BuildID) {
 	case amiv1alpha1.StateInitial:
@@ -176,7 +180,6 @@ func (r *PackerBuilderReconciler) resetState(ctx context.Context, pb *amiv1alpha
 	pb.Status.State = amiv1alpha1.StateInitial
 	pb.Status.LastTransitionTime = metav1.Now()
 
-	// Clear any error conditions or other status fields as needed
 	pb.Status.Conditions = []*amiv1alpha1.OpsyCondition{}
 
 	if err := r.Status.Update(ctx, pb); err != nil {
@@ -190,20 +193,20 @@ func (r *PackerBuilderReconciler) resetState(ctx context.Context, pb *amiv1alpha
 
 func (r *PackerBuilderReconciler) init(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
 	log.Info("Starting Init", "resource", pb.Name)
-	if pb.Spec.MaxNumberOfJobs == nil {
-		defaultMaxJobs := int32(3)
-		pb.Spec.MaxNumberOfJobs = &defaultMaxJobs
-	}
+	// if pb.Spec.MaxNumberOfJobs == nil {
+	// 	defaultMaxJobs := int32(3)
+	// 	pb.Spec.MaxNumberOfJobs = &defaultMaxJobs
+	// }
 
 	if pb.Status.FailedJobCount == nil {
 		pb.Status.FailedJobCount = new(int32)
 	}
 
-	if *pb.Status.FailedJobCount >= *pb.Spec.MaxNumberOfJobs {
-		log.Info("Maximum number of failed jobs reached", "FailedJobCount", *pb.Status.FailedJobCount)
-		retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
-		return ctrl.Result{RequeueAfter: retryAfter}, nil
-	}
+	// if *pb.Status.FailedJobCount >= *pb.Spec.MaxNumberOfJobs {
+	// 	log.Info("Maximum number of failed jobs reached", "FailedJobCount", *pb.Status.FailedJobCount)
+	// 	retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
+	// 	return ctrl.Result{RequeueAfter: retryAfter}, nil
+	// }
 
 	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateFlightChecks, "Transitioning to FlightChecks", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeFlightCheckStarted, log); err != nil {
 		return r.transitionToErrorState(ctx, pb, "Failed to transition to FlightChecks state", log)
@@ -215,9 +218,9 @@ func (r *PackerBuilderReconciler) init(ctx context.Context, pb *amiv1alpha1.Pack
 
 func (r *PackerBuilderReconciler) flightCheck(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
 	log.Info("Starting Flight Checks", "resource", pb.Name)
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	return r.transitionToErrorState(ctx, pb, "Failed to get PackerBuilder", log)
-	// }
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		return r.transitionToErrorState(ctx, pb, "Failed to get PackerBuilder", log)
+	}
 
 	activeBuild := pm.ActiveBuildCheck(ctx, pb.Namespace, pb.Name)
 
@@ -228,12 +231,11 @@ func (r *PackerBuilderReconciler) flightCheck(ctx context.Context, pb *amiv1alph
 	pb.Spec.Builder.ImageType = "ami"
 
 	if !activeBuild.Success {
-		log.Info(activeBuild.Message)
 
 		if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateJobRunning, "Transitioning to JobRunning since Active Build Exist", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeFlightCheckPassed, log); err != nil {
 			return r.transitionToErrorState(ctx, pb, "Failed to transition to JobRunning state", log)
 		}
-
+		log.Info(activeBuild.Message)
 		return ctrl.Result{Requeue: true}, nil
 	}
 
@@ -257,10 +259,10 @@ func (r *PackerBuilderReconciler) flightCheck(ctx context.Context, pb *amiv1alph
 
 func (r *PackerBuilderReconciler) createBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
 	log.Info("Create New Build", "resource", pb.Name)
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	log.Error(err, "Failed to get PackerBuilder")
-	// 	return ctrl.Result{}, err
-	// }
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		log.Error(err, "Failed to get PackerBuilder")
+		return ctrl.Result{}, err
+	}
 
 	if err := r.setupJob(ctx, pb, pm, log); err != nil {
 		log.Error(err, "Failed to setup job")
@@ -303,10 +305,10 @@ func (r *PackerBuilderReconciler) createBuild(ctx context.Context, pb *amiv1alph
 
 func (r *PackerBuilderReconciler) completeBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
 	log.Info("Completed Build, Post processing", "resource", pb.Name)
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	log.Error(err, "Failed to get PackerBuilder")
-	// 	return ctrl.Result{}, err
-	// }
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		log.Error(err, "Failed to get PackerBuilder")
+		return ctrl.Result{}, err
+	}
 	// Do nothing for not but update the state
 
 	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateAMICreated, "Transitioning to AMICreated", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeAMICreated, log); err != nil {
@@ -321,10 +323,10 @@ func (r *PackerBuilderReconciler) completeBuild(ctx context.Context, pb *amiv1al
 func (r *PackerBuilderReconciler) cleanupBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
 
 	log.Info("Ensure build artifacts are cleaned up from AWS")
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	log.Error(err, "Failed to get PackerBuilder")
-	// 	return ctrl.Result{}, err
-	// }
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		log.Error(err, "Failed to get PackerBuilder")
+		return ctrl.Result{}, err
+	}
 
 	// Delete KeyPair If it Exists
 	if pb.Status.LastRunKeyPair != "" {
@@ -354,10 +356,10 @@ func (r *PackerBuilderReconciler) cleanupBuild(ctx context.Context, pb *amiv1alp
 }
 
 func (r *PackerBuilderReconciler) errorBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	log.Error(err, "Failed to get PackerBuilder")
-	// 	return ctrl.Result{}, err
-	// }
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		log.Error(err, "Failed to get PackerBuilder")
+		return ctrl.Result{}, err
+	}
 	// Leave empty for now
 	// Should check how many previously failed attempts to be  build the AMI
 	// Close all connections and clean up any lingering resources
@@ -372,10 +374,10 @@ func (r *PackerBuilderReconciler) errorBuild(ctx context.Context, pb *amiv1alpha
 }
 
 func (r *PackerBuilderReconciler) transitionToJobCompletedState(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
-	// if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-	// 	log.Error(err, "Failed to get PackerBuilder")
-	// 	return ctrl.Result{}, err
-	// }
+	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+		log.Error(err, "Failed to get PackerBuilder")
+		return ctrl.Result{}, err
+	}
 
 	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateJobCompleted, "Transitioning to JobCompleted", amiv1alpha1.LastRunStatusCompleted, corev1.ConditionTrue, amiv1alpha1.ConditionTypeCompleted, log); err != nil {
 		log.Error(err, "Failed to transition to Error state")
