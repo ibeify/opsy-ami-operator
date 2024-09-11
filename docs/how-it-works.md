@@ -1,6 +1,6 @@
 ## Design
 <div>
-<img src="/assets/opsyami.svg" width="500%"/>
+<img src="assets/opsyami.svg" width="500%"/>
 </div>
 
 
