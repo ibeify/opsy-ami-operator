@@ -47,7 +47,6 @@ jobs:
 
   scan:
     needs: [check_repo_visibility, determine_versions]
-    if: needs.check_repo_visibility.outputs.is_public == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -68,6 +67,7 @@ jobs:
         run: |
           docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:${{ matrix.version }}
       - name: Run Trivy vulnerability scanner
+        if: needs.check_repo_visibility.outputs.is_public == 'true'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:${{ matrix.version }}"
@@ -75,7 +75,13 @@ jobs:
           output: "trivy-results-${{ matrix.version }}.sarif"
           severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
           vuln-type: "os,library"
+      - name: Run Trivy vulnerability scanner TABLE
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:${{ matrix.version }}"
+          format: "table"
       - name: Upload Trivy scan results to GitHub Security tab
+        if: needs.check_repo_visibility.outputs.is_public == 'true'
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: "trivy-results-${{ matrix.version }}.sarif"
