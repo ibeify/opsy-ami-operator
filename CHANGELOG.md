@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.0.2...v1.0.3) (2024-09-13)
+
+
+### Bug Fixes
+
+* address object updates via patch ([97e6425](https://github.com/ibeify/opsy-ami-operator/commit/97e64257da851d9b11db2bc85613c5585676c943))
+
 ## [1.0.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.0.1...v1.0.2) (2024-09-11)
 
 
