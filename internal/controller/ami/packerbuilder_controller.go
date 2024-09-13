@@ -369,6 +369,8 @@ func (r *PackerBuilderReconciler) watchBuild(ctx context.Context, pb *amiv1alpha
 		go func() {
 			wg.Wait()
 			close(done)
+			close(resultChan)
+			close(errChan)
 		}()
 
 		select {
@@ -378,17 +380,6 @@ func (r *PackerBuilderReconciler) watchBuild(ctx context.Context, pb *amiv1alpha
 			log.V(1).Info("Cleanup timed out, some goroutines may not have completed")
 		}
 
-		go func() {
-			for range resultChan {
-			}
-		}()
-		go func() {
-			for range errChan {
-			}
-		}()
-
-		close(resultChan)
-		close(errChan)
 	}
 
 	return resultChan, errChan, cleanup, nil
