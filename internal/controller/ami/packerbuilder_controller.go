@@ -20,14 +20,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 	"sync"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,7 +47,9 @@ import (
 	"github.com/ibeify/opsy-ami-operator/pkg/cond"
 	"github.com/ibeify/opsy-ami-operator/pkg/events"
 	f "github.com/ibeify/opsy-ami-operator/pkg/finalizer"
+	amimanager "github.com/ibeify/opsy-ami-operator/pkg/manager_ami"
 	packermanager "github.com/ibeify/opsy-ami-operator/pkg/manager_packer"
+	"github.com/ibeify/opsy-ami-operator/pkg/notifier"
 	"github.com/ibeify/opsy-ami-operator/pkg/opsy"
 	"github.com/ibeify/opsy-ami-operator/pkg/status"
 )
@@ -126,6 +132,15 @@ func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	return r.catchRek(ctx, &pb, coloredLog)
 }
 
+func (r *PackerBuilderReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&amiv1alpha1.PackerBuilder{}).
+		Owns(&batchv1.Job{}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
+		Complete(r)
+}
+
 func (r *PackerBuilderReconciler) catchRek(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
 	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
 
@@ -159,112 +174,9 @@ func (r *PackerBuilderReconciler) catchRek(ctx context.Context, pb *amiv1alpha1.
 	}
 }
 
-func (r *PackerBuilderReconciler) init(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
-	log.Info("Starting Init", "resource", pb.Name)
-	if pb.Spec.MaxNumberOfJobs == nil {
-		defaultMaxJobs := int32(3)
-		pb.Spec.MaxNumberOfJobs = &defaultMaxJobs
-	}
-
-	if pb.Status.FailedJobCount == nil {
-		pb.Status.FailedJobCount = new(int32)
-	}
-
-	if *pb.Status.FailedJobCount >= *pb.Spec.MaxNumberOfJobs {
-		log.Info("Maximum number of failed jobs reached", "FailedJobCount", *pb.Status.FailedJobCount)
-		retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
-		return ctrl.Result{RequeueAfter: retryAfter}, nil
-	}
-
-	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateFlightChecks, "Transitioning to FlightChecks", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeFlightCheckStarted, log); err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to FlightChecks state: %s", err), log)
-	}
-
-	log.Info("Successfully handled Initialize state, transitioning to FlightChecks")
-	return ctrl.Result{Requeue: true}, nil
-}
-
-func (r *PackerBuilderReconciler) flightCheck(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
-
-	log.Info("Starting Flight Checks", "resource", pb.Name)
-
-	activeBuild := pm.ActiveBuildCheck(ctx, pb.Namespace, pb.Name)
-
-	validFor, _ := time.ParseDuration(pb.Spec.TimeOuts.ExpiresIn)
-	retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
-
-	log.V(1).Info(activeBuild.Message)
-
-	if !activeBuild.Success {
-
-		if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateJobRunning, "Transitioning to JobRunning since Active Build Exist", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeFlightCheckPassed, log); err != nil {
-			return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobRunning state: %s", err), log)
-		}
-		log.Info(activeBuild.Message)
-		return ctrl.Result{Requeue: true}, nil
-	}
-
-	flightChecksPassed, err := r.performFlightChecks(ctx, pb, validFor, log)
-	if err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Error performing flight checks: %s", err), log)
-	}
-
-	if !flightChecksPassed {
-		log.Info(fmt.Sprintf("Requeuing after %s", retryAfter))
-		return ctrl.Result{RequeueAfter: retryAfter}, nil
-	}
-
-	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateJobCreation, "Transitioning to JobCreation", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeJobCreated, log); err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobCreation state: %s", err), log)
-	}
-
-	log.Info("Successfully handled FlightChecks state, transitioning to JobCreation")
-	return ctrl.Result{Requeue: true}, nil
-}
-
-func (r *PackerBuilderReconciler) createBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
-	log.Info("Create New Build", "resource", pb.Name)
-
-	if err := r.setupJob(ctx, pb, pm, log); err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to setup job: %v", err), log)
-	}
-
-	// retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
-
-	// if pb.Spec.GitSync.Secret == "" {
-	// 	log.Info(fmt.Sprintf("No secret specified for Git sync... Requeue after %s", retryAfter))
-	// 	return ctrl.Result{RequeueAfter: retryAfter}, nil
-	// }
-
-	amiBuild, err := pm.Job(ctx, pb)
-	if err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Unexpected Job Status: %v", err), log)
-	}
-
-	if err := controllerutil.SetControllerReference(pb, amiBuild, r.Scheme); err != nil {
-		log.Error(err, "Failed to set owner reference on job")
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to set owner reference on job: %v", err), log)
-	}
-
-	if err = r.Get(ctx, client.ObjectKeyFromObject(pb), amiBuild); err != nil && k8serrors.IsNotFound(err) {
-		if err := r.Create(ctx, amiBuild); err != nil {
-			return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Unexpect Job Status %v", err), log)
-		}
-	}
-
-	log.Info("Created Job", "JobName", amiBuild.Name)
-
-	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateJobRunning, "Transitioning to JobRunning", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeInProgress, log); err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobRunning state: %v", err), log)
-	}
-
-	log.Info("Successfully handled JobCreation state, transitioning to JobRunning")
-	return ctrl.Result{Requeue: true}, nil
-}
-
 func (r *PackerBuilderReconciler) cleanupBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
 
-	log.Info("Ensure build artifacts are cleaned up from AWS")
+	log.V(1).Info("Ensure build artifacts are cleaned up from AWS")
 
 	// Delete KeyPair If it Exists
 	if pb.Status.LastRunKeyPair != "" {
@@ -286,34 +198,325 @@ func (r *PackerBuilderReconciler) cleanupBuild(ctx context.Context, pb *amiv1alp
 	log.Info(fmt.Sprintf("Deleted SecurityGroup %s", pb.Status.LastRunSecurityGroupID))
 	pb.Status.LastRunSecurityGroupID = ""
 
-	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateInitial, "Transitioning to Intializing", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeInitial, log); err != nil {
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateInitial, "Transitioning to Intializing", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeInitial, log); err != nil {
 		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to Initialize state: %v", err), log)
 	}
 
-	log.Info("Successfully handled AMICreated state, transitioning to Initialize")
+	log.V(1).Info("Successfully handled AMICreated state, transitioning to Initialize")
+	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) createBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
+	log.V(1).Info("Create New Build", "resource", pb.Name)
+
+	if err := r.setupJob(ctx, pb, pm, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to setup job: %v", err), log)
+	}
+
+	amiBuild, err := pm.Job(ctx, pb)
+	if err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Unexpected Job Status: %v", err), log)
+	}
+
+	if err := controllerutil.SetControllerReference(pb, amiBuild, r.Scheme); err != nil {
+		log.Error(err, "Failed to set owner reference on job")
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to set owner reference on job: %v", err), log)
+	}
+
+	if err = r.Get(ctx, client.ObjectKeyFromObject(pb), amiBuild); err != nil && k8serrors.IsNotFound(err) {
+		if err := r.Create(ctx, amiBuild); err != nil {
+			return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Unexpect Job Status %v", err), log)
+		}
+	}
+
+	log.V(1).Info("Created Job", "JobName", amiBuild.Name)
+
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateJobRunning, "Transitioning to JobRunning", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeInProgress, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobRunning state: %v", err), log)
+	}
+
+	log.V(1).Info("Successfully handled JobCreation state, transitioning to JobRunning")
 	return ctrl.Result{Requeue: true}, nil
 }
 
 func (r *PackerBuilderReconciler) completeBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
-	log.Info("Completed Build, Post processing", "resource", pb.Name)
+	log.V(1).Info("Completed Build, Post processing", "resource", pb.Name)
 
-	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateAMICreated, "Transitioning to AMICreated", amiv1alpha1.LastRunStatusCompleted, corev1.ConditionTrue, amiv1alpha1.ConditionTypeAMICreated, log); err != nil {
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateAMICreated, "Transitioning to AMICreated", amiv1alpha1.LastRunStatusCompleted, corev1.ConditionTrue, amiv1alpha1.ConditionTypeAMICreated, log); err != nil {
 		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to AMICreated state: %v", err), log)
 	}
 
-	log.Info("Successfully handled JobCompleted state, transitioning to AMICreated")
+	log.V(1).Info("Successfully handled JobCompleted state, transitioning to AMICreated")
 	return ctrl.Result{Requeue: true}, nil
 }
 
-func (r *PackerBuilderReconciler) transitionToJobCompletedState(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
-	log.Info("transitionToJobCompletedState", "resource", pb.Name)
+func (r *PackerBuilderReconciler) errorBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
+	// Do something before handling error state
 
-	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateJobCompleted, "Transitioning to JobCompleted", amiv1alpha1.LastRunStatusCompleted, corev1.ConditionTrue, amiv1alpha1.ConditionTypeCompleted, log); err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobCompleted state: %v", err), log)
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateInitial, "Transitioning to Initializing", amiv1alpha1.LastRunStatusFailed, corev1.ConditionTrue, amiv1alpha1.ConditionTypeInitial, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to Error state: %v", err), log)
 	}
 
-	log.Info("Successfully handled JobRunning state, transitioning to JobCompleted")
+	log.Info("Successfully handled Error state, transitioning to Initializing")
 	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) flightCheck(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
+
+	log.V(1).Info("Starting Flight Checks", "resource", pb.Name)
+
+	activeBuild := pm.ActiveBuildCheck(ctx, pb.Namespace, pb.Name)
+
+	validFor, _ := time.ParseDuration(pb.Spec.TimeOuts.ExpiresIn)
+	retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
+
+	log.V(1).Info(activeBuild.Message)
+
+	if !activeBuild.Success {
+
+		if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateJobRunning, "Transitioning to JobRunning since Active Build Exist", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeFlightCheckPassed, log); err != nil {
+			return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobRunning state: %s", err), log)
+		}
+		log.Info(activeBuild.Message)
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	flightChecksPassed, err := r.performFlightChecks(ctx, pb, validFor, log)
+	if err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Error performing flight checks: %s", err), log)
+	}
+
+	if !flightChecksPassed {
+		log.Info(fmt.Sprintf("Requeuing after %s", retryAfter))
+		return ctrl.Result{RequeueAfter: retryAfter}, nil
+	}
+
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateJobCreation, "Transitioning to JobCreation", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeJobCreated, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobCreation state: %s", err), log)
+	}
+
+	log.V(1).Info("Successfully handled FlightChecks state, transitioning to JobCreation")
+	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) getJobFailureReason(job *batchv1.Job) string {
+	if len(job.Status.Conditions) > 0 {
+		for _, condition := range job.Status.Conditions {
+			if condition.Type == batchv1.JobFailed {
+				return fmt.Sprintf("Job failed: %s", condition.Message)
+			}
+		}
+	}
+	return "Job failed for unknown reason"
+}
+
+func (r *PackerBuilderReconciler) init(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
+	log.V(1).Info("Starting Init", "resource", pb.Name)
+
+	if pb.Spec.MaxNumberOfJobs == nil {
+		defaultMaxJobs := int32(3)
+		pb.Spec.MaxNumberOfJobs = &defaultMaxJobs
+	}
+
+	if pb.Status.FailedJobCount == nil {
+		pb.Status.FailedJobCount = new(int32)
+	}
+
+	if *pb.Status.FailedJobCount >= *pb.Spec.MaxNumberOfJobs {
+		log.Info("Maximum number of failed jobs reached", "FailedJobCount", *pb.Status.FailedJobCount)
+		retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
+		return ctrl.Result{RequeueAfter: retryAfter}, nil
+	}
+
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateFlightChecks, "Transitioning to FlightChecks", amiv1alpha1.LastRunStatusRunning, corev1.ConditionTrue, amiv1alpha1.ConditionTypeFlightCheckStarted, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to FlightChecks state: %s", err), log)
+	}
+
+	log.V(1).Info("Successfully handled Initialize state, transitioning to FlightChecks")
+	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) watchBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (<-chan BuildResult, <-chan error, func(), error) {
+	log.Info("Watch Build Started", "resource", pb.Name)
+
+	resultChan := make(chan BuildResult, 1)
+	errChan := make(chan error, 1)
+
+	ctx, cancel := context.WithCancel(ctx)
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		r.watchJobCompletion(ctx, pb.Namespace, pb.Status.JobName, resultChan, errChan)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := r.streamPodLogs(ctx, pb, log)
+		if err != nil && err != context.Canceled {
+			errChan <- fmt.Errorf("error streaming pod logs: %w", err)
+		}
+	}()
+
+	cleanup := func() {
+		cancel()
+
+		cleanupCtx, cleanupCancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cleanupCancel()
+
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			log.V(1).Info("All goroutines completed gracefully")
+		case <-cleanupCtx.Done():
+			log.V(1).Info("Cleanup timed out, some goroutines may not have completed")
+		}
+
+		go func() {
+			for range resultChan {
+			}
+		}()
+		go func() {
+			for range errChan {
+			}
+		}()
+
+		close(resultChan)
+		close(errChan)
+	}
+
+	return resultChan, errChan, cleanup, nil
+}
+
+func (r *PackerBuilderReconciler) processFlightCheckResults(results []status.Result, pb *amiv1alpha1.PackerBuilder, log logr.Logger) bool {
+	allChecksSuccessful := true
+	for _, result := range results {
+		if !result.Success {
+			log.Info(fmt.Sprintf("Flight check failed: %v", result.Message), "error", result.Error, "message", result.Message)
+			allChecksSuccessful = false
+		} else {
+			if strings.Contains(result.Message, "Base AMI") {
+				pb.Status.LastRunBaseImageID = result.Name
+			}
+
+			log.Info(fmt.Sprintf("Flight check passed: %v", result.Message), "message", result.Message)
+		}
+	}
+
+	return allChecksSuccessful
+}
+
+func (r *PackerBuilderReconciler) performFlightChecks(ctx context.Context, pb *amiv1alpha1.PackerBuilder, validFor time.Duration, log logr.Logger) (bool, error) {
+
+	var flightCheckResults []status.Result
+	am := amimanager.New(ctx, pb.Spec.Region, log)
+	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
+	pb.Spec.Builder.ImageType = "ami"
+	switch pb.Spec.Builder.ImageType {
+	case amiv1alpha1.AMI:
+		baseAMIResult := am.BaseAMIExists(ctx, pb.Spec.AMIFilters)
+		flightCheckResults = append(flightCheckResults, baseAMIResult)
+
+		latestAMIResult := pm.LatestAMIDoesNotExistsOrExpired(ctx, validFor, pb)
+		flightCheckResults = append(flightCheckResults, latestAMIResult)
+	case amiv1alpha1.Container:
+		// Handle container case if needed
+	}
+
+	return r.processFlightCheckResults(flightCheckResults, pb, log), nil
+}
+
+func (r *PackerBuilderReconciler) setupJob(ctx context.Context, packer *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) error {
+
+	packer.Status.JobID = uuid.New().String()[:5]
+	packer.Status.JobName = fmt.Sprintf("%s-%s", packer.Name, packer.Status.JobID)
+	packer.Status.JobStatus = amiv1alpha1.JobStatusRunning
+
+	if err := pm.ConstructCommand(ctx, packer); err != nil {
+		return err
+	}
+	log.V(1).Info("Constructed Packer Command", "Command", packer.Status.Command)
+
+	if err := r.Status.Update(ctx, packer); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *PackerBuilderReconciler) reconcileUpdate(ctx context.Context, pb *amiv1alpha1.PackerBuilder, newState amiv1alpha1.PackerBuilderState, message string, lastStatus amiv1alpha1.LastRunStatus, conditionStatus corev1.ConditionStatus, conditionType amiv1alpha1.OpsyConditionType, log logr.Logger) error {
+
+	from := pb.Status.State
+
+	pb.Status.State = newState
+	pb.Status.LastRunStatus = lastStatus
+	pb.Status.LastRunMessage = message
+	pb.Status.LastRun = metav1.Now()
+
+	log.V(1).Info("State transition successful", "from", from, "to", pb.Status.State, "message", message)
+
+	r.EventManager.RecordNormalEvent(pb, string(pb.Status.State), message)
+
+	if err := r.Cond.SetCondition(ctx, pb, conditionType, conditionStatus, string(pb.Status.State), message); err != nil {
+		log.Error(err, "Failed to set condition")
+		return err
+	}
+
+	buildInfo := notifier.Message{
+		Name:           pb.Name,
+		LatestBaseAMI:  pb.Status.LastRunBaseImageID,
+		LatestBuiltAMI: pb.Status.LastRunBuiltImageID,
+		Message:        message,
+	}
+
+	switch pb.Status.State {
+	case amiv1alpha1.StateInitial, amiv1alpha1.StateFlightChecks:
+		// DO NOTHING, do not send any messages if Initialing or FlightChecks
+	default:
+
+		if !isEmpty(pb.Spec.Notify.Slack) {
+			secret := corev1.Secret{}
+			if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Spec.Notify.Slack.Secret}, &secret); err != nil {
+				log.Error(err, "Failed to get secret")
+				return err
+			}
+
+			tokenBytes, ok := secret.Data["token"]
+			if !ok {
+				log.Error(nil, "Secret does not contain 'token' key", "secretName", pb.Spec.Notify.Slack.Secret)
+				return fmt.Errorf("secret does not contain 'token' key")
+			}
+
+			tokenString := string(tokenBytes)
+			channels := strings.Join(pb.Spec.Notify.Slack.Channels, ", ")
+			mess := notifier.NewSlackService(tokenString, channels)
+			if err := mess.Send(ctx, pb.Name, buildInfo); err != nil {
+				log.Error(err, "Failed to send slack message")
+				return err
+			}
+		}
+	}
+
+	if err := r.OpsyRunner.SetState(pb.Status.BuildID, pb.Status.State); err != nil {
+		log.Error(err, "Failed to transition state", "from", from, "to", pb.Status.State)
+		return err
+	}
+
+	patch := client.MergeFrom(pb.DeepCopy())
+	err := r.Patch(ctx, pb, patch)
+	if err != nil {
+		log.Error(err, "Failed to patch object")
+		return err
+	}
+
+	return nil
 }
 
 func (r *PackerBuilderReconciler) runningBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
@@ -374,70 +577,123 @@ func (r *PackerBuilderReconciler) runningBuild(ctx context.Context, pb *amiv1alp
 	}
 }
 
-func (r *PackerBuilderReconciler) watchBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (<-chan BuildResult, <-chan error, func(), error) {
-	log.Info("Watch Build Started", "resource", pb.Name)
+func (r *PackerBuilderReconciler) streamPodLogs(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) error {
+	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
 
-	resultChan := make(chan BuildResult, 1)
-	errChan := make(chan error, 1)
-
-	ctx, cancel := context.WithCancel(ctx)
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		r.watchJobCompletion(ctx, pb.Namespace, pb.Status.JobName, resultChan, errChan)
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err := r.streamPodLogs(ctx, pb, log)
-		if err != nil && err != context.Canceled {
-			errChan <- fmt.Errorf("error streaming pod logs: %w", err)
+	return wait.PollUntilContextCancel(ctx, 5*time.Second, true, func(ctx context.Context) (bool, error) {
+		podList := &corev1.PodList{}
+		if err := r.List(ctx, podList, client.InNamespace(pb.Namespace), client.MatchingLabels{"job-name": pb.Status.JobName}); err != nil {
+			log.Error(err, "Failed to list pods for job")
+			return false, nil // Retry
 		}
-	}()
 
-	cleanup := func() {
-		cancel()
+		if len(podList.Items) == 0 {
+			log.V(1).Info("No pods found for job, waiting...")
+			return false, nil // Retry
+		}
 
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cleanupCancel()
+		pod := &podList.Items[0]
 
-		done := make(chan struct{})
+		// Check if the pod is still initializing
+		if pod.Status.Phase == corev1.PodPending {
+			for _, containerStatus := range pod.Status.ContainerStatuses {
+				if containerStatus.State.Waiting != nil && containerStatus.State.Waiting.Reason == "PodInitializing" {
+					log.V(1).Info("Pod is still initializing, waiting...", "pod", pod.Name)
+					return false, nil // Retry
+				}
+			}
+		}
+
+		// Stream logs
+		streamCtx, cancelStream := context.WithCancel(ctx)
+		defer cancelStream()
+
+		errChan := make(chan error, 1)
 		go func() {
-			wg.Wait()
-			close(done)
+			err := pm.StreamLogs(streamCtx, pod.Name, pod.Namespace)
+			errChan <- err
 		}()
 
 		select {
-		case <-done:
-			log.V(1).Info("All goroutines completed gracefully")
-		case <-cleanupCtx.Done():
-			log.V(1).Info("Cleanup timed out, some goroutines may not have completed")
+		case err := <-errChan:
+			if err != nil {
+				if strings.Contains(err.Error(), "PodInitializing") {
+					log.V(1).Info("Pod is still initializing, will retry", "error", err)
+					return false, nil // Retry
+				}
+				log.Error(err, "Error occurred during log streaming")
+				return false, err // Stop retrying, propagate error
+			}
+			// StreamLogs completed successfully
+			log.V(1).Info("Log streaming completed successfully")
+			return true, nil // Stop polling, exit function
+		case <-ctx.Done():
+			log.V(1).Info("Context cancelled, stopping log streaming")
+			return false, ctx.Err() // Stop retrying, context cancelled
 		}
-
-		go func() {
-			for range resultChan {
-			}
-		}()
-		go func() {
-			for range errChan {
-			}
-		}()
-
-		close(resultChan)
-		close(errChan)
-	}
-
-	return resultChan, errChan, cleanup, nil
+	})
 }
 
-func (r *PackerBuilderReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&amiv1alpha1.PackerBuilder{}).
-		Owns(&batchv1.Job{}).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
-		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
-		Complete(r)
+func (r *PackerBuilderReconciler) transitionToJobCompletedState(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
+	log.V(1).Info("transitionToJobCompletedState", "resource", pb.Name)
+
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateJobCompleted, "Transitioning to JobCompleted", amiv1alpha1.LastRunStatusCompleted, corev1.ConditionTrue, amiv1alpha1.ConditionTypeCompleted, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to JobCompleted state: %v", err), log)
+	}
+
+	log.V(1).Info("Successfully handled JobRunning state, transitioning to JobCompleted")
+	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) transitionToErrorState(ctx context.Context, pb *amiv1alpha1.PackerBuilder, reason string, log logr.Logger) (ctrl.Result, error) {
+	// Do something before transitioning to error state
+
+	if err := r.reconcileUpdate(ctx, pb, amiv1alpha1.StateError, reason, amiv1alpha1.LastRunStatusFailed, corev1.ConditionFalse, amiv1alpha1.ConditionTypeFailed, log); err != nil {
+		log.Error(err, "Failed to transition to Error state")
+		return ctrl.Result{}, err
+	}
+
+	log.Info("Transitioned to Error state", "reason", reason)
+	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) watchJobCompletion(ctx context.Context, namespace, jobName string, resultChan chan<- BuildResult, errChan chan<- error) {
+	watcher, err := r.Clientset.BatchV1().Jobs(namespace).Watch(ctx, metav1.SingleObject(metav1.ObjectMeta{Name: jobName}))
+	if err != nil {
+		errChan <- fmt.Errorf("failed to create job watcher: %w", err)
+		return
+	}
+	defer watcher.Stop()
+
+	for {
+		select {
+		case event, ok := <-watcher.ResultChan():
+			if !ok {
+				errChan <- fmt.Errorf("job watch channel closed unexpectedly")
+				return
+			}
+
+			job, ok := event.Object.(*batchv1.Job)
+			if !ok {
+				errChan <- fmt.Errorf("unexpected object type from watch event: %T", event.Object)
+				continue
+			}
+
+			if job.Status.Succeeded > 0 {
+				resultChan <- BuildResult{Completed: true, Succeeded: true, Reason: "Job completed successfully"}
+				return
+			}
+
+			if job.Status.Failed > 0 {
+				resultChan <- BuildResult{Completed: true, Failed: true, Reason: r.getJobFailureReason(job)}
+				return
+			}
+
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+func isEmpty(x interface{}) bool {
+	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
