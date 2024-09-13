@@ -9,6 +9,7 @@ on:
       - "api/**"
       - "internal/**/**"
       - "Dockerfile"
+      - "go.*"
 
   push:
     branches:
@@ -19,6 +20,7 @@ on:
       - "api/**"
       - "internal/**/**"
       - "Dockerfile"
+      - "go.*"
   workflow_dispatch: # This allows the workflow to be manually triggered
 concurrency: production
 
