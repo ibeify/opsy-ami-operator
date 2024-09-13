@@ -39,14 +39,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	amiv1alpha1 "github.com/ibeify/opsy-ami-operator/api/ami/v1alpha1"
 	"github.com/ibeify/opsy-ami-operator/pkg/cond"
 	"github.com/ibeify/opsy-ami-operator/pkg/events"
-	f "github.com/ibeify/opsy-ami-operator/pkg/finalizer"
 	amimanager "github.com/ibeify/opsy-ami-operator/pkg/manager_ami"
 	packermanager "github.com/ibeify/opsy-ami-operator/pkg/manager_packer"
 	"github.com/ibeify/opsy-ami-operator/pkg/notifier"
@@ -107,9 +105,9 @@ func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	// if err := f.HandleFinalizer(ctx, &pb, r.Client, log); err != nil {
 	// 	return ctrl.Result{}, err
 	// }
-	if pb.DeletionTimestamp != nil {
-		return reconcile.Result{}, f.HandleFinalizer(ctx, &pb, r.Client, log)
-	}
+	// if pb.DeletionTimestamp != nil {
+	// 	return reconcile.Result{}, f.HandleFinalizer(ctx, &pb, r.Client, log)
+	// }
 
 	if pb.Status.BuildID == "" {
 		pb.Status.BuildID = uuid.New().String()
@@ -695,6 +693,7 @@ func (r *PackerBuilderReconciler) watchJobCompletion(ctx context.Context, namesp
 		}
 	}
 }
+
 func isEmpty(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
