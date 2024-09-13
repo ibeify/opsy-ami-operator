@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.1...v1.1.2) (2024-09-13)
+
+
+### Bug Fixes
+
+* revert back to distroless image ([44a710d](https://github.com/ibeify/opsy-ami-operator/commit/44a710d28c1d0eec74b74fb2617dc160f950869a))
+
 ## [1.1.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.0...v1.1.1) (2024-09-13)
 
 
