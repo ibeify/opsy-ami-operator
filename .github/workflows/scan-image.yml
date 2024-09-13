@@ -5,12 +5,10 @@ on:
     types: [published]
   schedule:
     - cron: "0 9 * * *"
-
 permissions:
   contents: write
   id-token: write
   security-events: write
-
 jobs:
   determine_versions:
     runs-on: ubuntu-latest
@@ -24,7 +22,7 @@ jobs:
       - name: Get versions
         id: get_versions
         run: |
-          VERSIONS=$(git tag --list 'v*.*.*' --sort=-version:refname | grep -v 'beta\|alpha' | head -n 3 | jq -R -s -c 'split("\n")[:-1]')
+          VERSIONS=$(git tag --list 'v*.*.*' --sort=-version:refname | grep -v 'beta\|alpha' | head -n 3 | sed 's/^v//' | jq -R -s -c 'split("\n")[:-1]')
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
   scan_image:
     needs: determine_versions
