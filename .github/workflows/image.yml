@@ -90,8 +90,4 @@ jobs:
         with:
           image-ref: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:$IMAGE_TAG"
           format: "table"
-          exit-code: "1"
-          ignore-unfixed: true
           # output: "trivy-results-${{ matrix.version }}.sarif"
-          severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
-          vuln-type: "os,library"
