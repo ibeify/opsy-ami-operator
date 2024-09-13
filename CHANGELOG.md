@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.3...v1.1.4) (2024-09-13)
+
+
+### Bug Fixes
+
+* attempt to use chainguard image ([592a745](https://github.com/ibeify/opsy-ami-operator/commit/592a745ff6cfd0b313654c9f81e45c73ed2265aa))
+
 ## [1.1.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.2...v1.1.3) (2024-09-13)
 
 
