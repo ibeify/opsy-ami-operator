@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.4...v1.1.5) (2024-09-13)
+
+
+### Bug Fixes
+
+* test image scanning during image build, add back scan.yml, only if repo is public ([99afab9](https://github.com/ibeify/opsy-ami-operator/commit/99afab9016d95fe4dcaa2f11ce3909f1ffd416fe))
+
 ## [1.1.4](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.3...v1.1.4) (2024-09-13)
 
 
