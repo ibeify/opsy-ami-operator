@@ -1,4 +1,4 @@
-name: build
+name: Scan Images
 on:
   workflow_dispatch:
   release:
