@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.0.4...v1.1.0) (2024-09-13)
+
+
+### Bug Fixes
+
+* **finalizer:** requires full update, patch dont cut it ([3a3e973](https://github.com/ibeify/opsy-ami-operator/commit/3a3e973e87ad3e6213223048a5b0c68875c17d64))
+
+
+### Features
+
+* **finalizer:** remove finalizer management ([56b5e66](https://github.com/ibeify/opsy-ami-operator/commit/56b5e663ff726655ee0c20e451f16f5b8f5cee64))
+
 ## [1.0.4](https://github.com/ibeify/opsy-ami-operator/compare/v1.0.3...v1.0.4) (2024-09-13)
 
 
