@@ -34,10 +34,9 @@ func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, lo
 			controllerutil.AddFinalizer(obj, "ami.opsy.dev/finalizer")
 			log.Info(fmt.Sprintf("Add Finalizer %s", "ami.opsy.dev/finalizer"))
 
-			patch := client.MergeFrom(obj)
-			err := r.Patch(ctx, obj, patch)
+			err := r.Update(ctx, obj)
 			if err != nil {
-				log.Error(err, "Failed to patch object")
+				log.Error(err, "Failed to update object")
 				return err
 			}
 
@@ -51,12 +50,12 @@ func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, lo
 			controllerutil.RemoveFinalizer(obj, "ami.opsy.dev/finalizer")
 			log.Info(fmt.Sprintf("Remove Finalizer %s", "ami.opsy.dev/finalizer"))
 
-			patch := client.MergeFrom(obj)
-			err := r.Patch(ctx, obj, patch)
+			err := r.Update(ctx, obj)
 			if err != nil {
-				log.Error(err, "Failed to patch object")
+				log.Error(err, "Failed to update object")
 				return err
 			}
+
 		}
 	}
 	return nil
