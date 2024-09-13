@@ -26,6 +26,7 @@ The operator is responsible for two primary actions
   - [Node Group AMI Instance Refreshing](#node-group-ami-instance-refreshing)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+  - [References](#references)
 
 ## AMI Building Using Packer
 
@@ -239,3 +240,7 @@ helm
   --set serviceAccount.annotations.roleArn=arn:aws:iam::<aws_account_id>:role
 
 ```
+
+
+## References
+- https://github.com/aws-samples/pipeline-for-hardening-eks-nodes-and-automating-updates/tree/main

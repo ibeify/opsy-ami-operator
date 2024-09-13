@@ -9,6 +9,14 @@
   vars:
     setup_audit: true
     run_audit: true
-    amzn2023cis_rule_1_2_2: false # Breaks patching    skip_reboot: false
-    amzn2023cis_rule_1_2_4: false # Breaks patching
-    amzn2023cis_rule_4_6_6: false # default image has no root password and nopasswd not removed from sudo
+    amzn2023cis_rule_4_6_6: false
+    amzn2023cis_config_aide: false
+    amzn2023cis_syslog_service: external
+    amzn2023cis_selinux_disable: true
+    amzn2023cis_rule_1_2_1: false
+    amzn2023cis_rule_1_3_1: false
+    amzn2023cis_rule_1_3_3: false
+    amzn2023cis_rule_6_2_10: false
+    amzn2023cis_rule_1_1_2_3: false
+    amzn2023cis_rule_1_1_4_3: false
+    amzn2023cis_rule_3_2_1: false
