@@ -82,7 +82,7 @@ func (m *ManagerPacker) getLogPatterns() []RegExsy {
 	return []RegExsy{
 		{
 			Name:    "BaseAMIID",
-			Pattern: regexp.MustCompile(configurations.BaseAMIPattern),
+			Pattern: regexp.MustCompile(string(configurations.BaseAMIPattern)),
 			Found:   new(bool),
 			StatusField: func(match string) {
 				m.PackerBuilder.Status.LastRunBaseImageID = match
@@ -90,7 +90,7 @@ func (m *ManagerPacker) getLogPatterns() []RegExsy {
 		},
 		{
 			Name:    "LatestAMIID",
-			Pattern: regexp.MustCompile(configurations.LastestAMIPattern),
+			Pattern: regexp.MustCompile(string(configurations.LastestAMIPattern)),
 			Found:   new(bool),
 			StatusField: func(match string) {
 				m.PackerBuilder.Status.LastRunBuiltImageID = match
@@ -99,7 +99,7 @@ func (m *ManagerPacker) getLogPatterns() []RegExsy {
 
 		{
 			Name:    "SecurityGroupID",
-			Pattern: regexp.MustCompile(configurations.SecurityGroupPattern),
+			Pattern: regexp.MustCompile(string(configurations.SecurityGroupPattern)),
 			Found:   new(bool),
 			StatusField: func(match string) {
 				m.PackerBuilder.Status.LastRunSecurityGroupID = match
@@ -108,7 +108,7 @@ func (m *ManagerPacker) getLogPatterns() []RegExsy {
 
 		{
 			Name:    "KeyPair",
-			Pattern: regexp.MustCompile(configurations.KeyPairPattern),
+			Pattern: regexp.MustCompile(string(configurations.KeyPairPattern)),
 			Found:   new(bool),
 			StatusField: func(match string) {
 				m.PackerBuilder.Status.LastRunKeyPair = match

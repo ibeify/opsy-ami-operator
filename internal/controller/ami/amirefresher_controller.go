@@ -160,11 +160,6 @@ func (r *AMIRefresherReconciler) setStatusCondition(ctx context.Context, obj con
 		return err
 	}
 
-	if err := r.Status.Update(ctx, obj); err != nil {
-		log.Error(err, "Failed to update Memcached status")
-		return err
-	}
-
 	return nil
 }
 

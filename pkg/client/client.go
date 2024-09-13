@@ -27,7 +27,7 @@ import (
 func ClientAWS(ctx context.Context, region string) (aws.Config, error) {
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion("us-west-2"))
+		config.WithRegion(region))
 	if err != nil {
 		return aws.Config{}, fmt.Errorf("unable to load SDK config, %v", err)
 	}

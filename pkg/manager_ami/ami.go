@@ -86,7 +86,10 @@ func calculateRemainingTime(expirationTime time.Time) string {
 func (m *ManagerAMI) BaseAMIExists(ctx context.Context, fltrs []amiv1alpha1.AMIFilters) status.Result {
 	return m.runWithTimeout(ctx, func(ctx context.Context) status.Result {
 		if len(fltrs) == 0 {
-			return status.Result{Success: false, Message: "No AMI filters provided; skipping base AMI check"}
+			return status.Result{
+				Success: true,
+				Message: "No AMI filters provided; skipping base AMI check",
+			}
 		}
 
 		var filters []types.Filter
@@ -100,7 +103,9 @@ func (m *ManagerAMI) BaseAMIExists(ctx context.Context, fltrs []amiv1alpha1.AMIF
 		images, err := m.DescribeImagesWithFilters(ctx, filters)
 		if err != nil {
 			if strings.Contains(err.Error(), "no AMIs found matching the provided filters") {
-				return status.Result{Success: true, Message: "No AMIs found matching the provided tags"}
+				return status.Result{
+					Success: true,
+					Message: "No AMIs found matching the provided tags"}
 			}
 			return status.Result{Success: false, Error: err}
 		}
@@ -124,26 +129,39 @@ func (m *ManagerAMI) BaseAMIExists(ctx context.Context, fltrs []amiv1alpha1.AMIF
 		}
 	}, 60*time.Second)
 }
+
 func (m *ManagerAMI) AMIChecks(ctx context.Context, tags map[string]string, duration time.Duration, checkType AMITypeCheck) status.Result {
 	return m.runWithTimeout(ctx, func(ctx context.Context) status.Result {
 		filters := m.BuildFilters(tags)
 
 		images, err := m.DescribeImagesWithFilters(ctx, filters)
 		if err != nil {
-			return status.Result{Success: false, Error: fmt.Errorf("failed to describe images: %w", err)}
+			return status.Result{
+				Success: false,
+				Error:   fmt.Errorf("failed to describe images: %w", err),
+			}
 		}
 
 		if len(images) == 0 {
-			return status.Result{Success: checkType.ImageNotFound, Message: "No AMIs found matching the provided tags"}
+			return status.Result{
+				Success: checkType.ImageNotFound,
+				Message: "No AMIs found matching the provided tags",
+			}
 		}
 
 		latestImage, createdTimestamp, err := m.FindLatestImage(images)
 		if err != nil {
-			return status.Result{Success: checkType.ImageNotFound, Message: "No AMIs found"}
+			return status.Result{
+				Success: checkType.ImageNotFound,
+				Message: "No AMIs found",
+			}
 		}
 
 		if latestImage == nil {
-			return status.Result{Success: checkType.ImageExist, Message: "No AMIs found with a valid create-timestamp"}
+			return status.Result{
+				Success: checkType.ImageExist,
+				Message: "No AMIs found with a valid create-timestamp",
+			}
 		}
 
 		m.log.V(1).Info("latest AMI found", "image", *latestImage.ImageId, "timestamp", createdTimestamp)
@@ -187,7 +205,6 @@ func (m *ManagerAMI) BuildFilters(tags map[string]string) []types.Filter {
 	return filters
 }
 
-// describeImagesWithFilters describes images using the AWS EC2 API with the provided filters
 func (m *ManagerAMI) DescribeImagesWithFilters(ctx context.Context, filters []types.Filter) ([]types.Image, error) {
 	input := &ec2.DescribeImagesInput{
 		Filters: filters,
@@ -199,7 +216,6 @@ func (m *ManagerAMI) DescribeImagesWithFilters(ctx context.Context, filters []ty
 	return result.Images, nil
 }
 
-// findLatestImage finds the latest image from a list of images based on their timestamps
 func (m *ManagerAMI) FindLatestImage(images []types.Image) (*types.Image, time.Time, error) {
 	var latestImage *types.Image
 	var createdTimestamp time.Time

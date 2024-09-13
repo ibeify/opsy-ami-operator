@@ -207,7 +207,6 @@ func (r *ManagerRefresh) waitForUpdateCompletion(ctx context.Context, nodeGroupN
 		Error  error
 	}
 
-	// Use a buffered channel for status updates
 	statusChan := make(chan statusResult, 1)
 
 	for {
@@ -216,7 +215,6 @@ func (r *ManagerRefresh) waitForUpdateCompletion(ctx context.Context, nodeGroupN
 			log.Info("Context cancelled while waiting for update completion")
 			return ctx.Err()
 		case <-ticker.C:
-			// Use a goroutine to check status
 			go func() {
 				status, err := r.getNodeGroupStatus(ctx, nodeGroupName)
 				statusChan <- statusResult{Status: status, Error: err}
@@ -282,7 +280,6 @@ func (r *ManagerRefresh) handleUpdateFailure(ctx context.Context, nodeGroupName 
 	return fmt.Errorf("node group update failed or degraded with status: %s", describeOutput.Nodegroup.Status)
 }
 
-// ListNodeGroups lists all node groups in a given EKS cluster
 func (r *ManagerRefresh) ListNodeGroups(ctx context.Context, clusterName string) (*eks.ListNodegroupsOutput, error) {
 
 	nodeGroups, err := r.eksClient.ListNodegroups(ctx, &eks.ListNodegroupsInput{
@@ -300,7 +297,6 @@ func (r *ManagerRefresh) ListNodeGroups(ctx context.Context, clusterName string)
 	return nodeGroups, nil
 }
 
-// trimNodeGroups removes the specified node groups from the list of node groups
 func (r *ManagerRefresh) TrimNodeGroups(nodeGroups []string, excludeNodeGroupNames []string) []string {
 	excludeMap := make(map[string]struct{}, len(excludeNodeGroupNames))
 	for _, name := range excludeNodeGroupNames {

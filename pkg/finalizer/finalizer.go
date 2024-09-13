@@ -34,9 +34,10 @@ func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, lo
 			controllerutil.AddFinalizer(obj, "ami.opsy.dev/finalizer")
 			log.Info(fmt.Sprintf("Add Finalizer %s", "ami.opsy.dev/finalizer"))
 
-			// Update the entire object
-			if err := r.Update(ctx, obj); err != nil {
-				log.Error(err, "Failed to update object with finalizer")
+			patch := client.MergeFrom(obj)
+			err := r.Patch(ctx, obj, patch)
+			if err != nil {
+				log.Error(err, "Failed to patch object")
 				return err
 			}
 
@@ -50,8 +51,10 @@ func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, lo
 			controllerutil.RemoveFinalizer(obj, "ami.opsy.dev/finalizer")
 			log.Info(fmt.Sprintf("Remove Finalizer %s", "ami.opsy.dev/finalizer"))
 
-			if err := r.Update(ctx, obj); err != nil {
-				log.Error(err, "Failed to update object after removing finalizer")
+			patch := client.MergeFrom(obj)
+			err := r.Patch(ctx, obj, patch)
+			if err != nil {
+				log.Error(err, "Failed to patch object")
 				return err
 			}
 		}
@@ -60,7 +63,6 @@ func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, lo
 }
 
 func deleteAssociatedJobs(ctx context.Context, obj client.Object, r client.Client, log logr.Logger) error {
-	// List all jobs associated with this PackerBuilder
 
 	jobList := &batchv1.JobList{}
 	if err := r.List(ctx, jobList,
@@ -70,7 +72,6 @@ func deleteAssociatedJobs(ctx context.Context, obj client.Object, r client.Clien
 		return fmt.Errorf("failed to list associated jobs: %w", err)
 	}
 
-	// Delete each job
 	for i := range jobList.Items {
 		job := &jobList.Items[i]
 		if err := r.Delete(ctx, job, client.PropagationPolicy(metav1.DeletePropagationBackground)); err != nil {

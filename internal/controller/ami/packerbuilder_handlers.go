@@ -16,7 +16,6 @@ import (
 	"github.com/ibeify/opsy-ami-operator/pkg/status"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -43,6 +42,7 @@ func (r *PackerBuilderReconciler) processFlightCheckResults(results []status.Res
 }
 
 func (r *PackerBuilderReconciler) performFlightChecks(ctx context.Context, pb *amiv1alpha1.PackerBuilder, validFor time.Duration, log logr.Logger) (bool, error) {
+
 	var flightCheckResults []status.Result
 	am := amimanager.New(ctx, pb.Spec.Region, log)
 	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
@@ -62,14 +62,25 @@ func (r *PackerBuilderReconciler) performFlightChecks(ctx context.Context, pb *a
 }
 
 func (r *PackerBuilderReconciler) transitionToErrorState(ctx context.Context, pb *amiv1alpha1.PackerBuilder, reason string, log logr.Logger) (ctrl.Result, error) {
+	// Do something before transitioning to error state
 
-	// Do nothing for now but update the state
 	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateError, reason, amiv1alpha1.LastRunStatusFailed, corev1.ConditionFalse, amiv1alpha1.ConditionTypeFailed, log); err != nil {
 		log.Error(err, "Failed to transition to Error state")
 		return ctrl.Result{}, err
 	}
 
 	log.Info("Transitioned to Error state", "reason", reason)
+	return ctrl.Result{Requeue: true}, nil
+}
+
+func (r *PackerBuilderReconciler) errorBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
+	// Do something before handling error state
+
+	if err := r.setStateAndUpdate(ctx, pb, amiv1alpha1.StateInitial, "Transitioning to Initializing", amiv1alpha1.LastRunStatusFailed, corev1.ConditionTrue, amiv1alpha1.ConditionTypeInitial, log); err != nil {
+		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to transition to Error state: %v", err), log)
+	}
+
+	log.Info("Successfully handled Error state, transitioning to Initializing")
 	return ctrl.Result{Requeue: true}, nil
 }
 
@@ -95,20 +106,17 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 
 	from := pb.Status.State
 
-	r.EventManager.RecordNormalEvent(pb, string(newState), message)
-
-	if err := r.Cond.SetCondition(ctx, pb, conditionType, conditionStatus, string(newState), message); err != nil {
-		log.Error(err, "Failed to set condition")
-		return err
-	}
-
-	log.Info("State transition successful", "from", pb.Status.State, "to", newState, "message", message)
 	pb.Status.State = newState
 	pb.Status.LastRunStatus = lastStatus
 	pb.Status.LastRunMessage = message
 	pb.Status.LastRun = metav1.Now()
-	if err := r.Status.Update(ctx, pb); err != nil {
-		log.Error(err, "Failed to update PackerBuilder status")
+
+	log.V(1).Info("State transition successful", "from", from, "to", pb.Status.State, "message", message)
+
+	r.EventManager.RecordNormalEvent(pb, string(pb.Status.State), message)
+
+	if err := r.Cond.SetCondition(ctx, pb, conditionType, conditionStatus, string(pb.Status.State), message); err != nil {
+		log.Error(err, "Failed to set condition")
 		return err
 	}
 
@@ -118,9 +126,10 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 		LatestBuiltAMI: pb.Status.LastRunBuiltImageID,
 		Message:        message,
 	}
+
 	switch pb.Status.State {
 	case amiv1alpha1.StateInitial, amiv1alpha1.StateFlightChecks:
-		// DO not send any message if Initialing or FlightChecks
+		// DO NOTHING, do not send any messages if Initialing or FlightChecks
 	default:
 
 		if !isEmpty(pb.Spec.Notify.Slack) {
@@ -129,7 +138,7 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 				log.Error(err, "Failed to get secret")
 				return err
 			}
-			// Extract the token from the secret
+
 			tokenBytes, ok := secret.Data["token"]
 			if !ok {
 				log.Error(nil, "Secret does not contain 'token' key", "secretName", pb.Spec.Notify.Slack.Secret)
@@ -146,19 +155,22 @@ func (r *PackerBuilderReconciler) setStateAndUpdate(ctx context.Context, pb *ami
 		}
 	}
 
-	if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
+	if err := r.OpsyRunner.SetState(pb.Status.BuildID, pb.Status.State); err != nil {
+		log.Error(err, "Failed to transition state", "from", from, "to", pb.Status.State)
 		return err
 	}
 
-	if err := r.OpsyRunner.SetState(pb.Status.BuildID, newState); err != nil {
-		log.Error(err, "Failed to transition state", "from", from, "to", newState)
+	patch := client.MergeFrom(pb.DeepCopy())
+	err := r.Patch(ctx, pb, patch)
+	if err != nil {
+		log.Error(err, "Failed to patch object")
 		return err
 	}
 
 	return nil
 }
 
-func (r *PackerBuilderReconciler) streamPodLogs(ctx context.Context, pb *amiv1alpha1.PackerBuilder, logChan chan<- string, log logr.Logger) error {
+func (r *PackerBuilderReconciler) streamPodLogs(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) error {
 	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
 
 	return wait.PollUntilContextCancel(ctx, 5*time.Second, true, func(ctx context.Context) (bool, error) {
@@ -224,67 +236,6 @@ func (r *PackerBuilderReconciler) getJobFailureReason(job *batchv1.Job) string {
 		}
 	}
 	return "Job failed for unknown reason"
-}
-
-func (r *PackerBuilderReconciler) runningBuild(ctx context.Context, pb *amiv1alpha1.PackerBuilder, pm *packermanager.ManagerPacker, log logr.Logger) (ctrl.Result, error) {
-	logChan, resultChan, errChan, cleanup, err := r.watchBuild(ctx, pb, pm, log)
-	if err != nil {
-		return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Failed to start build watch: %v", err), log)
-	}
-	defer cleanup()
-
-	ticker := time.NewTicker(15 * time.Second) // Check every 30 seconds
-	defer ticker.Stop()
-
-	for {
-		select {
-		case logMsg := <-logChan:
-			log.Info("Received log message", "message", logMsg)
-			// Update PackerBuilder status with the latest log message if needed
-
-		case result := <-resultChan:
-			if result.Completed {
-				if result.Succeeded {
-					log.Info("Job completed successfully")
-					return r.transitionToJobCompletedState(ctx, pb, log)
-				} else {
-					log.Error(nil, "Job failed", "reason", result.Reason)
-					return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Job failed: %s", result.Reason), log)
-				}
-			}
-
-		case err := <-errChan:
-			log.Error(err, "Error during build watch")
-			return r.transitionToErrorState(ctx, pb, fmt.Sprintf("Build watch error: %v", err), log)
-
-		case <-ticker.C:
-			// Check if PackerBuilder still exists
-			if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Name}, pb); err != nil {
-				if errors.IsNotFound(err) {
-					log.Info("PackerBuilder resource was deleted, stopping operations")
-					return ctrl.Result{}, nil
-
-				}
-				log.Error(err, "Failed to get PackerBuilder resource")
-				return r.transitionToErrorState(ctx, pb, "Failed to verify PackerBuilder existence", log)
-			}
-
-			// Check if Job still exists
-			job := &batchv1.Job{}
-			if err := r.Get(ctx, client.ObjectKey{Namespace: pb.Namespace, Name: pb.Status.JobName}, job); err != nil {
-				if errors.IsNotFound(err) {
-					log.Info("Job was deleted, transitioning to error state")
-					return r.transitionToErrorState(ctx, pb, "Associated Job was deleted", log)
-				}
-				log.Error(err, "Failed to get Job resource")
-				return r.transitionToErrorState(ctx, pb, "Failed to verify Job existence", log)
-			}
-
-		case <-ctx.Done():
-			log.Info("Context cancelled, stopping build watch")
-			return ctrl.Result{}, nil
-		}
-	}
 }
 
 func (r *PackerBuilderReconciler) watchJobCompletion(ctx context.Context, namespace, jobName string, resultChan chan<- BuildResult, errChan chan<- error) {

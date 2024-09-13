@@ -12,22 +12,21 @@ import (
 type regexPattern string
 
 const (
-	BaseAMIPattern       = `Found\sImage\sID:\s+(ami-[a-zA-Z0-9]+)`
-	LastestAMIPattern    = `AMI:\s+(ami-[a-zA-Z0-9]+)`
-	SecurityGroupPattern = `Found\ssecurity\sgroup\s(sg-[a-f0-9]{17})`
-	KeyPairPattern       = `Creating\stemporary\skeypair:\s(packer_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})`
-	WorkingDir           = "ami-builder"
-	WorkingDirRoot       = "workspace"
+	BaseAMIPattern        regexPattern = `Found\sImage\sID:\s+(ami-[a-zA-Z0-9]+)`
+	JobServiceAccountName              = "packer-ami-builder"
+	KeyPairPattern        regexPattern = `Creating\stemporary\skeypair:\s(packer_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})`
+	LastestAMIPattern     regexPattern = `AMI:\s+(ami-[a-zA-Z0-9]+)`
+	SecurityGroupPattern  regexPattern = `Found\ssecurity\sgroup\s(sg-[a-f0-9]{17})`
+	WorkingDir                         = "ami-builder"
+	WorkingDirRoot                     = "workspace"
 )
 
 type EntryKey string
 
-// Config struct with a map[Entry]interface{}
 type Config struct {
 	Values map[EntryKey]interface{}
 }
 
-// NewConfig initializes the Config struct with an empty map
 func NewConfig() *Config {
 	return &Config{
 		Values: make(map[EntryKey]interface{}),
@@ -90,19 +89,16 @@ func (c *Config) LoadConfig(filePath string) error {
 
 	// Attempt to load as YAML
 	if err := c.loadFromYAML(data); err == nil {
-		// YAML successfully loaded
 		return c.loadFromEnvVariables()
 	}
 
 	// Attempt to load as JSON
 	if err := c.loadFromJSON(data); err == nil {
-		// JSON successfully loaded
 		return c.loadFromEnvVariables()
 	}
 
 	// Attempt to load as .env file
 	if err := c.loadFromDotEnv(filePath); err == nil {
-		// .env successfully loaded
 		return c.loadFromEnvVariables()
 	}
 

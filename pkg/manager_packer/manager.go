@@ -401,13 +401,26 @@ func (m *ManagerPacker) runWithTimeout(ctx context.Context, op status.Operation,
 	defer cancel()
 
 	resultCh := make(chan status.Result, 1)
+	errCh := make(chan error, 1)
+
 	go func() {
-		resultCh <- op(ctx)
+		defer close(resultCh)
+		defer close(errCh)
+
+		result := op(ctx)
+
+		select {
+		case resultCh <- result:
+		case <-ctx.Done():
+			errCh <- ctx.Err()
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return status.Result{Success: false, Error: ctx.Err()}
+		return status.Result{Success: false, Error: fmt.Errorf("operation timed out after %v: %w", timeout, ctx.Err())}
+	case err := <-errCh:
+		return status.Result{Success: false, Error: fmt.Errorf("operation failed: %w", err)}
 	case result := <-resultCh:
 		return result
 	}

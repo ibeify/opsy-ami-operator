@@ -35,13 +35,13 @@ func (r *ManagerPacker) GetCommand(cmd command) command {
 	return cmd
 }
 
-func (r *ManagerPacker) Job(ctx context.Context, pb amiv1alpha1.PackerBuilder) (*batchv1.Job, error) {
+func (r *ManagerPacker) Job(ctx context.Context, pb *amiv1alpha1.PackerBuilder) (*batchv1.Job, error) {
 
 	var envVars []corev1.EnvVar
 	var gitSyncSecretEnv []corev1.EnvVar
 
-	pb.Spec.Builder.Debug = true
-	podReplacementPolicy := batchv1.TerminatingOrFailed
+	pb.Spec.Builder.Debug = true // Always run in debug mode for now
+	podReplacementPolicy := batchv1.Failed
 
 	if pb.Spec.Builder.Debug {
 		envVars = append(envVars, corev1.EnvVar{Name: "PACKER_LOG", Value: "1"}, corev1.EnvVar{Name: "AWS_SDK_GO_V2", Value: "debug"})
@@ -52,12 +52,7 @@ func (r *ManagerPacker) Job(ctx context.Context, pb amiv1alpha1.PackerBuilder) (
 		"-c",
 	}
 
-	if err := r.Get(ctx, types.NamespacedName{Name: pb.Name, Namespace: pb.Namespace}, &pb); err != nil {
-		return nil, err
-	}
-
-	if err := r.Config.LoadConfig("default-config.yaml"); err != nil {
-		fmt.Println("Error loading config:", err)
+	if err := r.Get(ctx, types.NamespacedName{Name: pb.Name, Namespace: pb.Namespace}, pb); err != nil {
 		return nil, err
 	}
 
@@ -171,6 +166,7 @@ func (r *ManagerPacker) Job(ctx context.Context, pb amiv1alpha1.PackerBuilder) (
 					Labels: labels,
 					Name:   pb.Status.JobName,
 				},
+
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyNever,
 					InitContainers: []corev1.Container{
@@ -187,11 +183,12 @@ func (r *ManagerPacker) Job(ctx context.Context, pb amiv1alpha1.PackerBuilder) (
 							},
 						},
 					},
-					ServiceAccountName: "packer-ami-builder",
+
+					ServiceAccountName: configurations.JobServiceAccountName,
 
 					Containers: []corev1.Container{
 						{
-							Name:            configurations.WorkingDirRoot,
+							Name:            "packer-runner",
 							Env:             envVars,
 							Image:           pb.Spec.Builder.Image,
 							ImagePullPolicy: corev1.PullIfNotPresent,

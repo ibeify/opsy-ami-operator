@@ -63,13 +63,36 @@ func (m *ManagerPacker) ensureDefaultCommands(packerBuilder *amiv1alpha1.PackerB
 }
 
 func (m *ManagerPacker) ensureCommandAt(commands *[]amiv1alpha1.Command, index int, subCommand string) {
-	if index >= len(*commands) || (*commands)[index].SubCommand != subCommand {
-		cmd := amiv1alpha1.Command{
+	// Find the command in the slice
+	existingIndex := -1
+	for i, cmd := range *commands {
+		if cmd.SubCommand == subCommand {
+			existingIndex = i
+			break
+		}
+	}
+
+	if existingIndex != -1 {
+		// Command exists, move it to the desired index if it's not already there
+		if existingIndex != index {
+			m.moveCommandToIndex(commands, existingIndex, index)
+		}
+	} else {
+		// Command doesn't exist, create a new one with default values
+		defaultCmd := amiv1alpha1.Command{
 			SubCommand: subCommand,
 			Color:      false,
 			WorkingDir: "",
 		}
-		*commands = append((*commands)[:index], append([]amiv1alpha1.Command{cmd}, (*commands)[index:]...)...)
+
+		// Insert the new command at the specified index
+		if index >= len(*commands) {
+			// If the index is out of range, append the command
+			*commands = append(*commands, defaultCmd)
+		} else {
+			// Insert the command at the specified index
+			*commands = append((*commands)[:index], append([]amiv1alpha1.Command{defaultCmd}, (*commands)[index:]...)...)
+		}
 	}
 }
 
