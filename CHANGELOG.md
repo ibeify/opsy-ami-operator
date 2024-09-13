@@ -1,3 +1,11 @@
+## [1.1.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.2...v1.1.3) (2024-09-13)
+
+
+### Bug Fixes
+
+* evaluate scanning ([d6676f8](https://github.com/ibeify/opsy-ami-operator/commit/d6676f807e3ca1c329ec704790b4dfb19ba85312))
+* scan image on create ([e001e98](https://github.com/ibeify/opsy-ami-operator/commit/e001e9837f2509c63b11eb5511df8ff2f2fe3cf0))
+
 ## [1.1.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.1...v1.1.2) (2024-09-13)
 
 
