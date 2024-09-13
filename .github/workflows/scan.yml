@@ -1,4 +1,4 @@
-name: Improved Vulnerability Scan
+name: Vulnerability Scan
 on:
   workflow_dispatch:
   release:
