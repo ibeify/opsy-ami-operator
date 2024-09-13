@@ -95,16 +95,20 @@ type PackerBuilderReconciler struct {
 // +kubebuilder:rbac:groups=ami.opsy.dev,resources=pods/log,verbs=get;list;watch
 
 func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	coloredLog := log.FromContext(ctx)
-	coloredLog.V(2).Info("New reconcilation cycle starts...", "name", req.Name, "namespace", req.Namespace)
+	log := log.FromContext(ctx)
+	log.V(2).Info("New reconcilation cycle starts...", "name", req.Name, "namespace", req.Namespace)
 
 	var pb amiv1alpha1.PackerBuilder
 	if err := r.Get(ctx, req.NamespacedName, &pb); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-
+	// Decide to not set a finalizer for now. We want to be able to delete the resource without any finalizer checks
+	// Jobs will be cleaned up by the controller via owner references.
+	// if err := f.HandleFinalizer(ctx, &pb, r.Client, log); err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 	if pb.DeletionTimestamp != nil {
-		return reconcile.Result{}, f.HandleFinalizer(ctx, &pb, r.Client, coloredLog)
+		return reconcile.Result{}, f.HandleFinalizer(ctx, &pb, r.Client, log)
 	}
 
 	if pb.Status.BuildID == "" {
@@ -114,22 +118,18 @@ func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		r.Cond.SetCondition(ctx, &pb, amiv1alpha1.ConditionTypeInitial, corev1.ConditionTrue, "Starting", "Transitioning to Initializing")
 	}
 
-	if err := f.HandleFinalizer(ctx, &pb, r.Client, coloredLog); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	if pb.Status.State == "" {
-		r.OpsyRunner.DefaultState(pb.Status.BuildID)
+		pb.Status.State = amiv1alpha1.StateInitial
 		if err := r.Status.Update(ctx, &pb); err != nil {
 
 			if errors.Is(err, context.DeadlineExceeded) {
-				coloredLog.Info("Context deadline exceeded while updating status")
+				log.Info("Context deadline exceeded while updating status")
 				return ctrl.Result{Requeue: true}, nil
 			}
 			return ctrl.Result{}, err
 		}
 	}
-	return r.catchRek(ctx, &pb, coloredLog)
+	return r.catchRek(ctx, &pb, log)
 }
 
 func (r *PackerBuilderReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -311,6 +311,7 @@ func (r *PackerBuilderReconciler) getJobFailureReason(job *batchv1.Job) string {
 }
 
 func (r *PackerBuilderReconciler) init(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
+
 	log.V(1).Info("Starting Init", "resource", pb.Name)
 
 	if pb.Spec.MaxNumberOfJobs == nil {
