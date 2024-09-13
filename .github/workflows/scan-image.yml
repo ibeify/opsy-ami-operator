@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Configure AWS credentials
+        id: creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
@@ -53,6 +54,6 @@ jobs:
           image-ref: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:${{ matrix.version }}"
           format: "table"
         env:
-          AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-          AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-          AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+          AWS_ACCESS_KEY_ID: ${{ steps.creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.creds.outputs.aws-secret-access-key }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
