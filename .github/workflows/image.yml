@@ -81,3 +81,14 @@ jobs:
 
         run: |
           make docker-build docker-push IMG=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:$IMAGE_TAG
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:$IMAGE_TAG"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          # output: "trivy-results-${{ matrix.version }}.sarif"
+          severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+          vuln-type: "os,library"
