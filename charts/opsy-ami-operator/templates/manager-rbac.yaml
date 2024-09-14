@@ -1,0 +1,109 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "opsy-ami-operator.fullname" . }}-manager-role
+  labels:
+  {{- include "opsy-ami-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - amirefreshers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - amirefreshers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - amirefreshers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - packerbuilders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - packerbuilders/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - packerbuilders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ami.opsy.dev
+  resources:
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "opsy-ami-operator.fullname" . }}-manager-rolebinding
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: opsy-ami-operator
+    app.kubernetes.io/part-of: opsy-ami-operator
+  {{- include "opsy-ami-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "opsy-ami-operator.fullname" . }}-manager-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "opsy-ami-operator.fullname" . }}-controller-manager'
+  namespace: '{{ .Release.Namespace }}'
