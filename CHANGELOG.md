@@ -1,3 +1,17 @@
+# [1.2.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.5...v1.2.0) (2024-09-14)
+
+
+### Bug Fixes
+
+* adjust image for how it works ([842ede4](https://github.com/ibeify/opsy-ami-operator/commit/842ede4b9429cc0dc47290ccefed4cf37144cb02))
+
+
+### Features
+
+* add helm-docs pre-commit ([2453fa8](https://github.com/ibeify/opsy-ami-operator/commit/2453fa8c9bcb2f3ac989e1641e224ee72f98c905))
+* **gitaction:** add dependabot ([8d387de](https://github.com/ibeify/opsy-ami-operator/commit/8d387de283e3b7df3218b68908d9157fa3548b9f))
+* update pre-commit config ([c64751b](https://github.com/ibeify/opsy-ami-operator/commit/c64751b23c116cb70112dcd4a2eeb115b0cff97f))
+
 ## [1.1.5](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.4...v1.1.5) (2024-09-13)
 
 
