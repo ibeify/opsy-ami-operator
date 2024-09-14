@@ -1,5 +1,5 @@
 ## Sourcing from a Private Repository
-```yaml 
+```yaml
 apiVersion: ami.refresh.ops/v1alpha1
 kind: PackerBuilder
 metadata:
@@ -13,12 +13,12 @@ spec:
       values: ["602401143452"]
   clusterName: "opsy-gitops"
   timeOuts:
-    expiresIn: "48h" 
+    expiresIn: "48h"
     controllerTimer: "5m"
   gitSync:
     image: "registry.k8s.io/git-sync/git-sync:v4.2.3"
     name: "git-sync"
-    secret: "git-sync" 
+    secret: "git-sync"
   region: "us-west-2"
   builder:
     repoURL: "https://github.com/ibeify/eks-node-group-ami-refresh"

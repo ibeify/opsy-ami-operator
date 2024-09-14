@@ -63,7 +63,7 @@ build {
     inline = [
       "sudo dnf -y install crypto-policies crypto-policies-scripts",
       "sudo fips-mode-setup --enable",
-      
+
     ]
     expect_disconnect = true
     execute_command   = "{{.Vars}} bash '{{.Path}}'"
@@ -82,5 +82,5 @@ build {
     execute_command   = "{{.Vars}} bash '{{.Path}}'"
     expect_disconnect = true
   }
- 
+
 }

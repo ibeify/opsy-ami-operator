@@ -29,7 +29,7 @@ This component is managed by the `PackerBuilder` Custom Resource Definition (CRD
 - If not, initiates a Packer build job in Kubernetes
 - Monitors the build process and updates the `PackerBuilder` status
 - Tags the resulting AMI with metadata (creation time, status, build ID, etc.)
-- Attempts to clean up any lingering artifacts such as security groups and keypairs 
+- Attempts to clean up any lingering artifacts such as security groups and keypairs
 
 - Supports custom Packer commands and working directories
 

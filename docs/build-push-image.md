@@ -22,5 +22,3 @@ This workflow builds and pushes Docker images to Amazon ECR.
 - `AWS_ROLE_NAME`
 - `AWS_REGION`
 - `REPOSITORY_NAME`
-
-

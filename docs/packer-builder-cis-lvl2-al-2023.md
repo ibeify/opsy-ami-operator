@@ -1,6 +1,6 @@
-## Using Ansible-Lock-Down for CIS lvl 2 Hardened AL2023 
+## Using Ansible-Lock-Down for CIS lvl 2 Hardened AL2023
 
-```yaml 
+```yaml
 apiVersion: ami.refresh.ops/v1alpha1
 kind: PackerBuilder
 metadata:

@@ -24,5 +24,3 @@ This workflow builds and pushes Helm charts to Amazon ECR.
 - `AWS_ROLE_NAME`
 - `AWS_REGION`
 - `Name` (Helm chart name)
-
-

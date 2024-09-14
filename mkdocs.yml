@@ -85,6 +85,7 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 extra_css:
   - https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css
+  - stylesheets/extra.css
 extra_javascript:
   - https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js
 
@@ -120,6 +121,3 @@ nav:
           - Public Repository: packer-builder-public.md
           - Private Repository: packer-builder-private.md
           - AL2023 CIS LVL2: packer-builder-cis-lvl2-al-2023.md
-extra_css:
-  - stylesheets/extra.css
-

@@ -2,7 +2,7 @@
 
 <div class="grid cards" markdown>
 <div class="grid-item" markdown>
-<img src="assets/opsy-ami-bot.svg" width="100%" text-align="left"/> 
+<img src="assets/opsy-ami-bot.svg" width="100%" text-align="left"/>
 </div>
  The Opsy AMI Operator is a sophisticated Kubernetes controller designed to streamline and automate the lifecycle management of Amazon Machine Images (AMIs) for AWS-based Kubernetes clusters. This powerful tool seamlessly integrates with both managed Amazon EKS clusters and self-managed Kubernetes environments on AWS.
 </div>
@@ -13,7 +13,7 @@
 
 !!! abstract "Features and Benefits"
 
-   
+
     Key features include:
 
     - **Automated AMI Building**: Leverages HashiCorp Packer to create custom, up-to-date AMIs tailored to your specific requirements.
@@ -26,4 +26,3 @@
 
 
 By automating these critical processes, the Opsy AMI Operator significantly enhances cluster security, reduces operational overhead, and ensures consistency across your Kubernetes environments on AWS.
-

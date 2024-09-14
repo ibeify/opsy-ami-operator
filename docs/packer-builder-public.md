@@ -1,4 +1,4 @@
-## **PackerBuilder** 
+## **PackerBuilder**
 ## Sourcing from Public Repository
 
 ```yaml
@@ -10,12 +10,12 @@ metadata:
 spec:
   clusterName: "opsy-gitops"
   timeOuts:
-    expiresIn: "1h" 
+    expiresIn: "1h"
     controllerTimer: "5m"
   gitSync:
     image: "registry.k8s.io/git-sync/git-sync:v4.2.3"
     name: "git-sync"
-    secret: "git-sync" 
+    secret: "git-sync"
   region: "us-west-2"
   builder:
     repoURL:  "https://github.com/aws-samples/amazon-eks-custom-amis.git"
@@ -39,4 +39,3 @@ spec:
       args:
       workingDir: "."
 ```
-

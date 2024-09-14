@@ -4,18 +4,18 @@
 
 ## Introduction
 
-The Opsy AMI Operator is designed to automate the process of building AMIs using Packer and refreshing AMIs for EKS node groups. 
+The Opsy AMI Operator is designed to automate the process of building AMIs using Packer and refreshing AMIs for EKS node groups.
 
 ## Features
 
 - Automatically checks for the latest AMI, of your base AMI using provided filters.
-- Creates and monitors Kubernetes jobs for AMI building if necessary using packer. 
+- Creates and monitors Kubernetes jobs for AMI building if necessary using packer.
 - Ensures node groups always use the `status:active` ami when under management.
-- Node Group instance refreshing with an option to exclude node groups. 
+- Node Group instance refreshing with an option to exclude node groups.
 
 
 ## Overview
-The operator is responsible for two primary actions 
+The operator is responsible for two primary actions
 
 - [Opsy AMI Operator](#opsy-ami-operator)
   - [Introduction](#introduction)
@@ -46,7 +46,7 @@ spec:
       values: ["602401143452"]
   clusterName: "opsy-gitops"
   timeOuts:
-    expiresIn: "48h" 
+    expiresIn: "48h"
     controllerTimer: "5m"
   notifier:
     slack:
@@ -55,7 +55,7 @@ spec:
   gitSync:
     image: "registry.k8s.io/git-sync/git-sync:v4.2.3"
     name: "git-sync"
-    secret: "git-sync" 
+    secret: "git-sync"
   region: "us-west-2"
   builder:
     repoURL: "https://github.com/ibeify/eks-node-group-ami-refresh"
@@ -72,29 +72,29 @@ spec:
         onError: "cleanup"
 ```
 
-Primarily, the packer-build-controller runs packer builds as Jobs in Kubernetes.It only attempts to execute the build when it discovers an AMI does not exist with the appropriate tags. 
+Primarily, the packer-build-controller runs packer builds as Jobs in Kubernetes.It only attempts to execute the build when it discovers an AMI does not exist with the appropriate tags.
 
-  In general these tags are 
+  In general these tags are
 
-  - Valid Creation Time Stamp tag. 
-  - A status tag set to active 
-  - A Build ID identifying the instance of the PackerBuilder that owns this AMI. IF the PackBuilder Instance is removed the relationship is severed 
-  - Default tags ensuring its identity as managed by the operator. 
+  - Valid Creation Time Stamp tag.
+  - A status tag set to active
+  - A Build ID identifying the instance of the PackerBuilder that owns this AMI. IF the PackBuilder Instance is removed the relationship is severed
+  - Default tags ensuring its identity as managed by the operator.
 
-  Tag ensure we do not attempt to prematurely recreate our Manage AMI. For a source AMI, a Base AMI can be discovered via provided filters. You don't not have to use the filter mechanism to source a Base AMI, you can run packer builds as self contained projects. The packer build itself is user provided and can be sourced from either a publicly or privately accessible repository. [Git-sync](https://github.com/kubernetes/git-sync) is used for pulling the packer repo. Example packer projects can be found [packer](/packer/). This process is mostly idempotent, with a window between the discovery of the created AMI and the job completely terminating ( default, `hardcoded`, is 15min after completion of a job). Most testing has proven this to be a non-factor as an interruption in the controller should be short lived. Anyways, worth noting. You can control the reconciliation schedule of the controller and when an AMI should expire. I advise setting this once as adjustments do not necessarily guarantee execution on schedule. It may be a hair off, in most case not really a factor. Lastly, since each controller has it own CRD you do not have to run both. You could strictly use the packer-builder-controller to main AMI creation or the opsy-ami-operator for node group management. 
-  
-  ### Status 
+  Tag ensure we do not attempt to prematurely recreate our Manage AMI. For a source AMI, a Base AMI can be discovered via provided filters. You don't not have to use the filter mechanism to source a Base AMI, you can run packer builds as self contained projects. The packer build itself is user provided and can be sourced from either a publicly or privately accessible repository. [Git-sync](https://github.com/kubernetes/git-sync) is used for pulling the packer repo. Example packer projects can be found [packer](/packer/). This process is mostly idempotent, with a window between the discovery of the created AMI and the job completely terminating ( default, `hardcoded`, is 15min after completion of a job). Most testing has proven this to be a non-factor as an interruption in the controller should be short lived. Anyways, worth noting. You can control the reconciliation schedule of the controller and when an AMI should expire. I advise setting this once as adjustments do not necessarily guarantee execution on schedule. It may be a hair off, in most case not really a factor. Lastly, since each controller has it own CRD you do not have to run both. You could strictly use the packer-builder-controller to main AMI creation or the opsy-ami-operator for node group management.
+
+  ### Status
   The PackerBuilder Instance holds are relevant information regarding the status of the current or most recent build.   Thing you can discover from the `status` of PackerBuilder
 
-  - The build ID associated with the Instance 
-  - The command used for running the packer Job 
+  - The build ID associated with the Instance
+  - The command used for running the packer Job
   - The number of Previously Failed Jobs ( default allowed at any time is `3`)
-  - The job ID associated with the most recent Job, this used in part to name the job 
-  - The status of the Last run Job 
-  - The execution timestamp of the last run job 
-  - The base AMI ID used for the last run job 
+  - The job ID associated with the most recent Job, this used in part to name the job
+  - The status of the Last run Job
+  - The execution timestamp of the last run job
+  - The base AMI ID used for the last run job
   - The built AMI ID used for the last run job
-      
+
     ```yaml
     status:
       buildID: 728d7a64-ca85-42c9-9acd-60c681d4efe3
@@ -116,44 +116,44 @@ Primarily, the packer-build-controller runs packer builds as Jobs in Kubernetes.
       lastRunMessage: Reconciliation in progress
       lastRunStatus: running
     ```
-     ### Command  
-     
-     By default if no commands are provided the controller will attempt the below command, 
+     ### Command
+
+     By default if no commands are provided the controller will attempt the below command,
      ```bash
-     > packer init . && packer validate . && packer build -color=false . 
-     ``` 
-    The order of operation will always be `init`, `validate`, `build`. If only a build command is provide the controller will add init and validate using the working directory provided by the build. There are a few working ( As of writing this in 2024 ) [samples](config/samples) 
+     > packer init . && packer validate . && packer build -color=false .
+     ```
+    The order of operation will always be `init`, `validate`, `build`. If only a build command is provide the controller will add init and validate using the working directory provided by the build. There are a few working ( As of writing this in 2024 ) [samples](config/samples)
 
-    ### Notifications 
+    ### Notifications
 
-    Currently you can send messages regarding state transitions (JobRunning -> JobCompleted for example). We support 
+    Currently you can send messages regarding state transitions (JobRunning -> JobCompleted for example). We support
 
-    - `Slack`: Requires slack bot token and list of channels.  
+    - `Slack`: Requires slack bot token and list of channels.
     - `SNS` (TBD)
     - `SES` (TBD)
     - `Discord` (TBD)
 
     ![Alt text](assets/slack-notifier.png?raw=true "opsy-ami-operator")
 
-    ### Image Adoption 
+    ### Image Adoption
     The controller is capable of finding previously created AMIs and adopting management of the AMI.This comes in handy if you completely remove the associated packerBuilder from the cluster. Since there can only be one, it looks for that Special AMI... This is enabled by default.
-    
-    - The AMI will need to have an `active` status tag 
-    - The AMI should not be expired. 
-    - In addition to above the AMI should have the following tags 
-      ```bash 
+
+    - The AMI will need to have an `active` status tag
+    - The AMI should not be expired.
+    - In addition to above the AMI should have the following tags
+      ```bash
         "brought-to-you-by":  "opsy-the-ami-operator",
         "cluster-name":       "opsy-eks",
         "created-by":         "name-of-your-crd-instance",
         "packer-repo":        "repo-where-packer-code-was-sourced",
         "packer-repo-branch": "branchable-branch",
       ```
-      These tags have worked well thus far. If you find additional scrutiny is needed feel free to open a PR. 
+      These tags have worked well thus far. If you find additional scrutiny is needed feel free to open a PR.
 
 
 ## Node Group AMI Instance Refreshing
 
-`AMIRefresher` 
+`AMIRefresher`
 
 ```yaml
 apiVersion: ami.refresh.ops/v1alpha1
@@ -188,7 +188,7 @@ The controller looks for an AMI either provided as an ID or using filters to a s
 ## Prerequisites
 
 - A cluster to run jobs from
-- An IRSA Role for the packer job.[See IAM Policy details ](https://developer.hashicorp.com/packer/integrations/hashicorp/amazon#iam-task-or-instance-role) 
+- An IRSA Role for the packer job.[See IAM Policy details ](https://developer.hashicorp.com/packer/integrations/hashicorp/amazon#iam-task-or-instance-role)
   ```yaml
     apiVersion: v1
     kind: ServiceAccount
@@ -198,7 +198,7 @@ The controller looks for an AMI either provided as an ID or using filters to a s
     annotations:
         eks.amazonaws.com/role-arn: arn:aws:iam::012345678910:role/eks-packer-builder
   ```
-- This project uses [git-sync](https://github.com/kubernetes/git-sync) to pull repos for the packer job. You'll need to provide credentials to access your repo.Below is a simple example for github tokens. More on this can be found in the [manual](https://github.com/kubernetes/git-sync) 
+- This project uses [git-sync](https://github.com/kubernetes/git-sync) to pull repos for the packer job. You'll need to provide credentials to access your repo.Below is a simple example for github tokens. More on this can be found in the [manual](https://github.com/kubernetes/git-sync)
   ```yaml
   apiVersion: v1
   kind: Secret
@@ -207,7 +207,7 @@ The controller looks for an AMI either provided as an ID or using filters to a s
     namespace: default  # Change this if you're using a different namespace
   type: Opaque
   data:
-    username: c2VjcmLTQ1Nzg5= 
+    username: c2VjcmLTQ1Nzg5=
     token: Y2hwZ0kxRDU5Q0VrVUtPZ0hzTEdjemFqeTM1UEJhYg==
   ```
 
@@ -228,10 +228,10 @@ The controller looks for an AMI either provided as an ID or using filters to a s
 
 ## Installation
 
-helm 
+helm
 
 ```bash
-> kubectl apply -k config/crd/ 
+> kubectl apply -k config/crd/
   # Place holder command from gitops
   helm upgrade --install <release_name> <local_chart_directory> \
   --version <chart_version> --namespace default --create-namespace \

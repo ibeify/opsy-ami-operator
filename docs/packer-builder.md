@@ -31,7 +31,7 @@ These tags prevent unnecessary rebuilds and maintain AMI lifecycle management.
 
 ### **Build Process**
 
-- Can Adopt Existing AMI which meet all criteria 
+- Can Adopt Existing AMI which meet all criteria
 - Can discover running jobs in case of interrupted service.
 - Configurable reconciliation schedule and AMI expiration
 
@@ -54,7 +54,7 @@ spec:
       values: ["602401143452"]
   clusterName: "opsy-gitops"
   timeOuts:
-    expiresIn: "48h" 
+    expiresIn: "48h"
     controllerTimer: "5m"
   notifier:
     slack:
@@ -63,7 +63,7 @@ spec:
   gitSync:
     image: "registry.k8s.io/git-sync/git-sync:v4.2.3"
     name: "git-sync"
-    secret: "git-sync" 
+    secret: "git-sync"
   region: "us-west-2"
   builder:
     repoURL: "https://github.com/ibeify/eks-node-group-ami-refresh"
@@ -132,7 +132,7 @@ The controller can adopt existing AMIs that meet specific criteria:
 
 
 
-  
+
 Required tags for adoption:
 ```bash
 "brought-to-you-by":  "opsy-the-ami-operator"
@@ -145,11 +145,11 @@ Required tags for adoption:
 
 ## Prerequisites
 
-- **Kubernetes Cluster**: A functional Kubernetes cluster to run the controller and its jobs. 
+- **Kubernetes Cluster**: A functional Kubernetes cluster to run the controller and its jobs.
 
-- **IRSA Role for Packer**: An IAM Role for Service Accounts (IRSA) configured for Packer jobs. 
+- **IRSA Role for Packer**: An IAM Role for Service Accounts (IRSA) configured for Packer jobs.
     - [See IAM Policy details](https://developer.hashicorp.com/packer/integrations/hashicorp/amazon#iam-task-or-instance-role)
-    
+
     - Example ServiceAccount configuration:
       ```yaml
       apiVersion: v1
@@ -161,8 +161,8 @@ Required tags for adoption:
           eks.amazonaws.com/role-arn: arn:aws:iam::012345678910:role/eks-packer-builder
       ```
 
-- **Git Repository Access**: The project uses [git-sync](https://github.com/kubernetes/git-sync) to pull repositories for Packer jobs. 
-  
+- **Git Repository Access**: The project uses [git-sync](https://github.com/kubernetes/git-sync) to pull repositories for Packer jobs.
+
     - Example Secret for GitHub token:
       ```yaml
       apiVersion: v1
@@ -172,13 +172,13 @@ Required tags for adoption:
         namespace: default  # Adjust namespace as needed
       type: Opaque
       data:
-        username: c2VjcmLTQ1Nzg5= 
+        username: c2VjcmLTQ1Nzg5=
         token: Y2hwZ0kxRDU5Q0VrVUtPZ0hzTEdjemFqeTM1UEJhYg==
       ```
       For more details, refer to the [git-sync manual](https://github.com/kubernetes/git-sync)
-    
-  
--  **Packer Configuration**: Set `ami_id` and `region` as variables if you plan to use filters for finding the Base AMI. 
+
+
+-  **Packer Configuration**: Set `ami_id` and `region` as variables if you plan to use filters for finding the Base AMI.
 
         Example:
         ```hcl
@@ -192,4 +192,3 @@ Required tags for adoption:
             default = "us-east-1"
         }
         ```
-

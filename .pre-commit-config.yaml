@@ -7,11 +7,12 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v4.4.0
     hooks:
       # Safety
       - id: detect-aws-credentials
       - id: detect-private-key
+      - id: trailing-whitespace
 
       # git checks
       - id: check-merge-conflict
@@ -20,37 +21,43 @@ repos:
 
       # General checks
       - id: trailing-whitespace
-        name: Trim Trailing Whitespace
-        description: This hook trims trailing whitespace.
-        entry: trailing-whitespace-fixer
-        language: python
-        types: [text]
-        args: [--markdown-linebreak-ext=md]
+      # - id: check-yaml
       - id: end-of-file-fixer
 
-  # Scan for passwords
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.52.2
     hooks:
-      - id: detect-secrets
-        args: ["--baseline", ".config/.secrets.baseline"]
-        exclude: .config/.gitleaks-report.json
+      - id: golangci-lint
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.17.0
+    rev: v8.19.1
     hooks:
       - id: gitleaks
-        args: ["--baseline-path", ".config/.gitleaks-report.json"]
 
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.32.0 # or higher tag
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.22
     hooks:
-      - id: yamllint
+      - id: helmlint
+      - id: packer-validate
+
 
   - repo: https://github.com/norwoodj/helm-docs
-    rev: ""
+    rev: "v1.14.2"
     hooks:
       - id: helm-docs
         args:
           # Make the tool search for charts only under the `charts` directory
           - --chart-search-root=charts
+
+  - repo: local
+    hooks:
+      - id: kubebuilder-generate
+        name: Run kubebuilder generate
+        entry: make generate
+        language: system
+        pass_filenames: false
+      - id: make-manifests
+        name: Run make manifests
+        entry: make manifests
+        language: system
+        pass_filenames: false

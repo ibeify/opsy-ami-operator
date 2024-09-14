@@ -78,4 +78,3 @@ spec:
 - Excludes any node groups listed in the `exclude` field
 - Updates the launch template for each eligible node group with the new AMI ID
 - Initiates an instance refresh process for each updated node group
-

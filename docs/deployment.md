@@ -44,7 +44,7 @@ Before starting the installation, ensure you have the following:
    aws iam attach-role-policy --role-name opsy-ami-operator-role --policy-arn arn:aws:iam::aws:policy/AmazonEC2FullAccess
 
    # Create Kubernetes service account
-   kubectl create serviceaccount opsy-ami-operator -n $NAMESPACE 
+   kubectl create serviceaccount opsy-ami-operator -n $NAMESPACE
 
    # Annotate the service account with the IAM role ARN
    kubectl annotate serviceaccount opsy-ami-operator -n $NAMESPACE eks.amazonaws.com/role-arn=arn:aws:iam::${ACCOUNT_ID}:role/opsy-ami-operator-role
@@ -93,7 +93,7 @@ Before starting the installation, ensure you have the following:
 
 - Ensure IAM roles and policies are correctly set up
 - Verify that your cluster has the necessary permissions to pull images and create resources
-- Ensure you have provided credentials for github access.  
+- Ensure you have provided credentials for github access.
 
 ## **Upgrading**
 
@@ -110,6 +110,6 @@ helm upgrade opsy-ami-operator ./charts/opsy-ami-operator \
 To remove the Opsy AMI Operator:
 
 ```bash
-helm uninstall opsy-ami-operator -n $NAMESPACE 
+helm uninstall opsy-ami-operator -n $NAMESPACE
 kubectl delete -k config/crd/
 ```

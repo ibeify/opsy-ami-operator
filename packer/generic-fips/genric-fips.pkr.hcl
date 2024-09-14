@@ -1,8 +1,8 @@
 source "amazon-ebs" "generic" {
   ami_name      = "generic-{{timestamp}}"
-  instance_type = var.instance_type 
+  instance_type = var.instance_type
   region        = var.region
-  source_ami    = var.ami_id 
+  source_ami    = var.ami_id
   ssh_username  = "ec2-user"
   communicator  = "ssh"
 
@@ -19,7 +19,7 @@ source "amazon-ebs" "generic" {
 build {
   name    = "generic"
   sources = ["source.amazon-ebs.generic"]
-  
+
   provisioner "shell" {
     inline = [
       "sudo dnf -y install crypto-policies crypto-policies-scripts",
