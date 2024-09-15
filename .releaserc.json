@@ -13,7 +13,7 @@
     "@semantic-release/changelog",
     "@semantic-release/github",
     [
-      "@semantic-release-helm",
+      "semantic-release-helm",
       {
         "chartPath": "charts/opsy-ami-operator"
       }
