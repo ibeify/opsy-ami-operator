@@ -515,7 +515,7 @@ func (r *PackerBuilderReconciler) runningBuild(ctx context.Context, pb *amiv1alp
 	}
 	defer cleanup()
 
-	ticker := time.NewTicker(15 * time.Second) // Check every 30 seconds
+	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
 	for {
