@@ -2,6 +2,7 @@
 {{ template "chart.description" . }}
 
 {{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+{{ template "chart.requirementsSection" . }}
 
 ## Additional Information
 
@@ -13,13 +14,23 @@
 
 ## Installing the Chart
 
-To install the chart with the release name `auto-ops`:
-
 ```console
-$ helm repo add foo-bar http://charts.foo-bar.com
-$ helm install auto-ops foo-bar/{{ template "chart.name" . }}
+helm repo add opsy-ami-operator https://ibeify.github.io/opsy-ami-operator
+helm repo update
 ```
 
-{{ template "chart.requirementsSection" . }}
+```console
+helm install [RELEASE_NAME] opsy-ami-operator/opsy-ami-operator
+```
+The command deploys opsy-ami-operator on the Kubernetes cluster in the default configuration.
+
+
+## Uninstall Chart
+
+```console
+helm uninstall [RELEASE_NAME]
+```
+This removes all the Kubernetes components associated with the chart and deletes the release.
+
 
 {{ template "chart.valuesSection" . }}

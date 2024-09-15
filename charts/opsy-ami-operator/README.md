@@ -2,7 +2,7 @@
 
 A Helm chart for The Opsy AMI Operator is designed to automate the process of building AMIs using Packer and refreshing AMIs for EKS node groups.
 
-![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.0](https://img.shields.io/badge/AppVersion-1.1.0-informational?style=flat-square)
+![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.0](https://img.shields.io/badge/AppVersion-1.3.0-informational?style=flat-square)
 
 ## Additional Information
 
@@ -13,12 +13,22 @@ A Helm chart for The Opsy AMI Operator is designed to automate the process of bu
 
 ## Installing the Chart
 
-To install the chart with the release name `auto-ops`:
+```console
+helm repo add opsy-ami-operator https://ibeify.github.io/opsy-ami-operator
+helm repo update
+```
 
 ```console
-$ helm repo add foo-bar http://charts.foo-bar.com
-$ helm install auto-ops foo-bar/opsy-ami-operator
+helm install [RELEASE_NAME] opsy-ami-operator/opsy-ami-operator
 ```
+The command deploys opsy-ami-operator on the Kubernetes cluster in the default configuration.
+
+## Uninstall Chart
+
+```console
+helm uninstall [RELEASE_NAME]
+```
+This removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Values
 
