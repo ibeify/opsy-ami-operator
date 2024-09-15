@@ -9,7 +9,6 @@ metadata:
     app.kubernetes.io/created-by: opsy-ami-operator
     app.kubernetes.io/part-of: opsy-ami-operator
   {{- include "opsy-ami-operator.labels" . | nindent 4 }}
-  namespace: system
 spec:
   endpoints:
     - path: /metrics
