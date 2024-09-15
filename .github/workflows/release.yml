@@ -91,7 +91,7 @@ jobs:
     if: needs.release.outputs.new_release_published == 'true'
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
