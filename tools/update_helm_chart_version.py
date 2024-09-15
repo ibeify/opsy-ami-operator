@@ -8,7 +8,7 @@ new_version = sys.argv[1]
 # Define the paths to the Chart.yaml and version files
 chart_path = os.path.join(
     os.path.dirname(__file__),
-    "../charts/node-group-opsy-ami-operator/Chart.yaml",
+    "../charts/opsy-ami-operator/Chart.yaml",
 )
 version_file_path = os.path.join(os.path.dirname(__file__), "../version")
 

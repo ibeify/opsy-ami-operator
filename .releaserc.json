@@ -12,12 +12,18 @@
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     "@semantic-release/github",
+    [
+      "@semantic-release-helm",
+      {
+        "chartPath": "charts/opsy-ami-operator"
+      }
+    ],
 
     [
       "@semantic-release/git",
       {
         "assets": [
-          "version",
+          "charts/opsy-ami-operator/Chart.yaml",
           "CHANGELOG.md"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
