@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.5.2...v1.5.3) (2024-09-15)
+
+
+### Bug Fixes
+
+* scan only on release ([663dcce](https://github.com/ibeify/opsy-ami-operator/commit/663dcce6c70a5d710058c0ffbc6bf6ee1d714511))
+
 ## [1.5.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.5.1...v1.5.2) (2024-09-15)
 
 
