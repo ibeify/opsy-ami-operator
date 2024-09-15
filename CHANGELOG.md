@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.3.0...v1.4.0) (2024-09-15)
+
+
+### Features
+
+* update helm readme ([7723bc1](https://github.com/ibeify/opsy-ami-operator/commit/7723bc1624cd1ca3668d453af5f32fa14373fa3c))
+
 # [1.3.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.2.0...v1.3.0) (2024-09-15)
 
 
