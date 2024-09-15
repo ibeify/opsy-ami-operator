@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.5.3...v1.6.0) (2024-09-15)
+
+
+### Features
+
+* new release ([8258585](https://github.com/ibeify/opsy-ami-operator/commit/8258585e044a71d414ba4c95085d5e251f7f407a))
+
 ## [1.5.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.5.2...v1.5.3) (2024-09-15)
 
 
