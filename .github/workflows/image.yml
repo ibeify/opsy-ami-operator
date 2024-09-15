@@ -42,6 +42,11 @@ jobs:
         run: |
           npm install --save-dev @semantic-release/exec
 
+      - name: semantic-release-helm
+        if: github.ref == 'refs/heads/main'
+        run: |
+          npm install --save-dev @semantic-release-helm
+
       - name: Semantic Release
         if: github.ref == 'refs/heads/main'
         uses: cycjimmy/semantic-release-action@v4
