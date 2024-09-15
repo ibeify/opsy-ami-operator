@@ -1,0 +1,25 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Additional Information
+
+
+- Automatically checks for the latest AMI, of your base AMI using provided filters.
+- Creates and monitors Kubernetes jobs for AMI building if necessary using packer.
+- Ensures node groups always use the `status:active` ami when under management.
+- Node Group instance refreshing with an option to exclude node groups.
+
+## Installing the Chart
+
+To install the chart with the release name `auto-ops`:
+
+```console
+$ helm repo add foo-bar http://charts.foo-bar.com
+$ helm install auto-ops foo-bar/{{ template "chart.name" . }}
+```
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}

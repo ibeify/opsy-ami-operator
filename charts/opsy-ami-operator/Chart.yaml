@@ -1,6 +1,6 @@
 apiVersion: v2
 name: opsy-ami-operator
-description: A Helm chart for Kubernetes
+description: A Helm chart for The Opsy AMI Operator is designed to automate the process of building AMIs using Packer and refreshing AMIs for EKS node groups.
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -19,3 +19,7 @@ version: 1.0.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "1.0.0"
+
+maintainers:
+  - email: info@ibeify.io
+    name: Ibeify Operator
