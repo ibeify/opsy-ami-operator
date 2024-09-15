@@ -1,3 +1,13 @@
+# [1.3.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.2.0...v1.3.0) (2024-09-15)
+
+
+### Features
+
+* add servicemonitor to helm chart ([65e47bc](https://github.com/ibeify/opsy-ami-operator/commit/65e47bcdf4036170259f4114932bfd07eb540349))
+* helm chart work ([deded63](https://github.com/ibeify/opsy-ami-operator/commit/deded63dce59e71c03a82d07e7b17854b4ece2b3))
+* **helm:** update chart version ([573cc2a](https://github.com/ibeify/opsy-ami-operator/commit/573cc2a4705ab0fc9297ee54887832a266b692b4))
+* increment helm version ([1daa9df](https://github.com/ibeify/opsy-ami-operator/commit/1daa9dfdda25c239c92a833c781d0a0e22d76657))
+
 # [1.2.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.1.5...v1.2.0) (2024-09-14)
 
 
