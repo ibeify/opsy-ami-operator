@@ -47,7 +47,7 @@ jobs:
       - name: semantic-release-helm
         if: github.ref == 'refs/heads/main'
         run: |
-          npm install --save-dev @semantic-release-helm
+          npm install --save-dev semantic-release-helm
 
       - name: Semantic Release
         if: github.ref == 'refs/heads/main'
