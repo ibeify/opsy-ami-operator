@@ -27,7 +27,7 @@ spec:
     branch: "main"
     image: "hashicorp/packer:latest"
     dir: "packer/al2023-cis-lvl2"
-    secret: "aws-creds"
+    # secret: "aws-creds"
     commands:
       - subCommand: "build"
         workingDir: "packer/al2023-cis-lvl2"

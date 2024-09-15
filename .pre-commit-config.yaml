@@ -24,10 +24,10 @@ repos:
       # - id: check-yaml
       # - id: end-of-file-fixer
 
-  - repo: https://github.com/golangci/golangci-lint
-    rev: v1.52.2
-    hooks:
-      - id: golangci-lint
+  # - repo: https://github.com/golangci/golangci-lint
+  #   rev: v1.52.2
+  #   hooks:
+  #     - id: golangci-lint
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.19.1

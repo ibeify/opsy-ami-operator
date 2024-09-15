@@ -79,11 +79,8 @@ type PackerBuilderSpec struct {
 	TimeOuts TimeOuts `json:"timeOuts,omitempty"`
 	//+optional
 	GitSync Sync `json:"gitSync,omitempty"`
-
-	Notify Notify `json:"notifier,omitempty"`
-
 	//+optional
-	MaxNumberOfJobs *int32 `json:"maxNumberOfJobs,omitempty"`
+	Notify Notify `json:"notifier,omitempty"`
 	//+optional
 	Region string `json:"region,omitempty"`
 	//+optional
@@ -97,14 +94,15 @@ type Sync struct {
 }
 
 type Builder struct {
-	Branch    string    `json:"branch,omitempty"`
-	Commands  []Command `json:"commands,omitempty"`
-	Debug     bool      `json:"debug,omitempty"`
-	Dir       string    `json:"dir,omitempty"`
-	Image     string    `json:"image,omitempty"`
-	ImageType ImageType `json:"imageType,omitempty"`
-	RepoURL   string    `json:"repoURL,omitempty"`
-	Secret    string    `json:"secret,omitempty"`
+	Branch                string    `json:"branch,omitempty"`
+	Commands              []Command `json:"commands,omitempty"`
+	Debug                 bool      `json:"debug,omitempty"`
+	Dir                   string    `json:"dir,omitempty"`
+	Image                 string    `json:"image,omitempty"`
+	ImageType             ImageType `json:"imageType,omitempty"`
+	RepoURL               string    `json:"repoURL,omitempty"`
+	Secret                string    `json:"secret,omitempty"`
+	JobServiceAccountName string    `json:"jobServiceAccountName,omitempty"`
 }
 
 type Command struct {
@@ -152,10 +150,9 @@ type PackerBuilderStatus struct {
 	//+optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 	//+optional
-	State PackerBuilderState `json:"state,omitempty"`
-	// Notify Notify `json:"notify,omitempty"`
+	MaxNumberOfFailedJobs *int32 `json:"maxNumberOfFailedJobs,omitempty"`
 	//+optional
-
+	State PackerBuilderState `json:"state,omitempty"`
 }
 
 // +kubebuilder:resource:shortName=pb

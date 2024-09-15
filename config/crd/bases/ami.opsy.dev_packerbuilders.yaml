@@ -95,6 +95,8 @@ spec:
                     type: string
                   imageType:
                     type: string
+                  jobServiceAccountName:
+                    type: string
                   repoURL:
                     type: string
                   secret:
@@ -111,9 +113,6 @@ spec:
                   secret:
                     type: string
                 type: object
-              maxNumberOfJobs:
-                format: int32
-                type: integer
               notifier:
                 properties:
                   slack:
@@ -251,6 +250,9 @@ spec:
               lastTransitionTime:
                 format: date-time
                 type: string
+              maxNumberOfFailedJobs:
+                format: int32
+                type: integer
               state:
                 type: string
             type: object

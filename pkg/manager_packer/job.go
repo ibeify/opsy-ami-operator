@@ -184,7 +184,13 @@ func (r *ManagerPacker) Job(ctx context.Context, pb *amiv1alpha1.PackerBuilder) 
 						},
 					},
 
-					ServiceAccountName: configurations.JobServiceAccountName,
+					// Conditionally set ServiceAccountName
+					ServiceAccountName: func() string {
+						if pb.Spec.Builder.JobServiceAccountName != "" {
+							return pb.Spec.Builder.JobServiceAccountName
+						}
+						return ""
+					}(),
 
 					Containers: []corev1.Container{
 						{

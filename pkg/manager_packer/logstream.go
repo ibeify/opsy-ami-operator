@@ -26,7 +26,6 @@ import (
 	configurations "github.com/ibeify/opsy-ami-operator/pkg/config"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func (m *ManagerPacker) StreamLogs(ctx context.Context, name, namespace string) error {
@@ -80,11 +79,6 @@ func (m *ManagerPacker) processLogStream(ctx context.Context, stream io.ReadClos
 }
 
 func (m *ManagerPacker) getLogPatterns() []RegExsy {
-
-	err := m.Status.Client.Get(context.Background(), types.NamespacedName{Namespace: m.PackerBuilder.Namespace, Name: m.PackerBuilder.Name}, m.PackerBuilder)
-	if err != nil {
-		m.Log.Error(err, "Error getting PackerBuilder status")
-	}
 
 	return []RegExsy{
 		{
@@ -140,10 +134,6 @@ func (m *ManagerPacker) processLogLine(ctx context.Context, line string, pattern
 
 	if allFound {
 		m.Log.Info("All values found, stopping log stream")
-
-		if err := m.Status.Update(ctx, m.PackerBuilder); err != nil {
-			m.Log.Error(err, "Error updating PackerBuilder status")
-		}
 
 		amiUpdateResult := m.handleAMIUpdates(ctx, m.PackerBuilder)
 

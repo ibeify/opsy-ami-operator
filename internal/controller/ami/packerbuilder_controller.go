@@ -312,16 +312,16 @@ func (r *PackerBuilderReconciler) init(ctx context.Context, pb *amiv1alpha1.Pack
 
 	log.V(1).Info("Starting Init", "resource", pb.Name)
 
-	if pb.Spec.MaxNumberOfJobs == nil {
+	if pb.Status.MaxNumberOfFailedJobs == nil {
 		defaultMaxJobs := int32(3)
-		pb.Spec.MaxNumberOfJobs = &defaultMaxJobs
+		pb.Status.MaxNumberOfFailedJobs = &defaultMaxJobs
 	}
 
 	if pb.Status.FailedJobCount == nil {
 		pb.Status.FailedJobCount = new(int32)
 	}
 
-	if *pb.Status.FailedJobCount >= *pb.Spec.MaxNumberOfJobs {
+	if *pb.Status.FailedJobCount >= *pb.Status.MaxNumberOfFailedJobs {
 		log.Info("Maximum number of failed jobs reached", "FailedJobCount", *pb.Status.FailedJobCount)
 		retryAfter, _ := time.ParseDuration(pb.Spec.TimeOuts.ControllerTimer)
 		return ctrl.Result{RequeueAfter: retryAfter}, nil
@@ -362,7 +362,7 @@ func (r *PackerBuilderReconciler) watchBuild(ctx context.Context, pb *amiv1alpha
 	cleanup := func() {
 		cancel()
 
-		cleanupCtx, cleanupCancel := context.WithTimeout(ctx, 10*time.Second)
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cleanupCancel()
 
 		done := make(chan struct{})
@@ -500,8 +500,7 @@ func (r *PackerBuilderReconciler) reconcileUpdate(ctx context.Context, pb *amiv1
 	}
 
 	patch := client.MergeFrom(pb.DeepCopy())
-	err := r.Patch(ctx, pb, patch)
-	if err != nil {
+	if err := r.Patch(ctx, pb, patch); err != nil {
 		log.Error(err, "Failed to patch object")
 		return err
 	}
