@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.6.0...v1.6.1) (2024-09-15)
+
+
+### Bug Fixes
+
+* remove namespace from servicemonitor ([a2550f6](https://github.com/ibeify/opsy-ami-operator/commit/a2550f6ddd74a88d74b89145c8db502e40160b2b))
+
 # [1.6.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.5.3...v1.6.0) (2024-09-15)
 
 
