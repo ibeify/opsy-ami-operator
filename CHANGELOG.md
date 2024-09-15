@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.5.0...v1.5.1) (2024-09-15)
+
+
+### Bug Fixes
+
+* use correct github token env var ([003c296](https://github.com/ibeify/opsy-ami-operator/commit/003c29674218c09040bc677cbd4da6d7aaea3cc2))
+
 # [1.5.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.4.0...v1.5.0) (2024-09-15)
 
 
