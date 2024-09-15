@@ -79,35 +79,3 @@ func (s *Status) Update(ctx context.Context, obj client.Object) error {
 		return nil
 	})
 }
-
-// func (s *Status) Update(ctx context.Context, obj client.Object) error {
-// 	return wait.ExponentialBackoff(wait.Backoff{
-// 		Steps:    5,
-// 		Duration: 100 * time.Millisecond,
-// 		Factor:   2.0,
-// 		Jitter:   0.1,
-// 	}, func() (bool, error) {
-
-// 		latestObj := obj.DeepCopyObject().(client.Object)
-// 		if err := s.Client.Get(ctx, client.ObjectKeyFromObject(obj), latestObj); err != nil {
-// 			return false, fmt.Errorf("failed to get latest version of object: %w", err)
-// 		}
-
-// 		// Copy the status from obj to latestObj
-// 		statusField := reflect.ValueOf(latestObj).Elem().FieldByName("Status")
-// 		if statusField.IsValid() && statusField.CanSet() {
-// 			statusField.Set(reflect.ValueOf(obj).Elem().FieldByName("Status"))
-// 		}
-
-// 		// Update the status
-// 		if err := s.Client.Status().Update(ctx, latestObj); err != nil {
-// 			if errors.IsConflict(err) {
-// 				return false, err
-// 			}
-
-// 			return false, fmt.Errorf("failed to update object status: %w", err)
-// 		}
-
-// 		return true, nil
-// 	})
-// }
