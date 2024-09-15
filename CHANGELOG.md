@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.4.0...v1.5.0) (2024-09-15)
+
+
+### Features
+
+* allow different service accounts to be provide for build ([e5f02bc](https://github.com/ibeify/opsy-ami-operator/commit/e5f02bcd95997ac73dd92e5876c54f4ab5690ab6))
+
 # [1.4.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.3.0...v1.4.0) (2024-09-15)
 
 
