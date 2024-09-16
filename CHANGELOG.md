@@ -1,3 +1,11 @@
+# [1.7.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.6.1...v1.7.0) (2024-09-16)
+
+
+### Features
+
+* force new release ([c53c2d3](https://github.com/ibeify/opsy-ami-operator/commit/c53c2d358073503a950a214d068a7d83a9e74c65))
+* update changes for helm chart ([71caf75](https://github.com/ibeify/opsy-ami-operator/commit/71caf752d431856da1eed5901db2404521fdf7ba))
+
 ## [1.6.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.6.0...v1.6.1) (2024-09-15)
 
 
