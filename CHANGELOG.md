@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.7.2...v1.8.0) (2024-09-16)
+
+
+### Features
+
+* add rbac for events ([82b3814](https://github.com/ibeify/opsy-ami-operator/commit/82b3814ed72230ed9323e990e0eb772539164263))
+
 ## [1.7.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.7.1...v1.7.2) (2024-09-16)
 
 
