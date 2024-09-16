@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.1...v1.9.2) (2024-09-16)
+
+
+### Bug Fixes
+
+* correct source for slack notification image ([66e53a3](https://github.com/ibeify/opsy-ami-operator/commit/66e53a387866e14d7002a7942451f0707c49bb69))
+
 ## [1.9.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.0...v1.9.1) (2024-09-16)
 
 
