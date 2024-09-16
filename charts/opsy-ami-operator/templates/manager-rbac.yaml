@@ -52,7 +52,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - ami.refresh.ops
+  - ami.opsy.dev
   resources:
   - packerbuilders
   verbs:
@@ -64,13 +64,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ami.refresh.ops
+  - ami.opsy.dev
   resources:
   - packerbuilders/finalizers
   verbs:
   - update
 - apiGroups:
-  - ami.refresh.ops
+  - ami.opsy.dev
   resources:
   - packerbuilders/status
   verbs:
