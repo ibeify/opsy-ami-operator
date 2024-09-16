@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.10.0...v1.11.0) (2024-09-16)
+
+
+### Features
+
+* remove unneeded gitaction ([b93e411](https://github.com/ibeify/opsy-ami-operator/commit/b93e4112428d05a840d19eefaaabaa7771031eb9))
+
 # [1.10.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.3...v1.10.0) (2024-09-16)
 
 
