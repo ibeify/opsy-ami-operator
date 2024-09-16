@@ -138,7 +138,7 @@ The order of operation will always be `init`, `validate`, `build`. If only a bui
   - `SES` (TBD)
   - `Discord` (TBD)
 
-  ![Alt text](assets/slack-notifier.png?raw=true "opsy-ami-operator")
+  ![Alt text](docs/assets/slack-notifier.png?raw=true "opsy-ami-operator")
 
     ### Image Adoption
     The controller is capable of finding previously created AMIs and adopting management of the AMI.This comes in handy if you completely remove the associated packerBuilder from the cluster. Since there can only be one, it looks for that Special AMI... This is enabled by default.
