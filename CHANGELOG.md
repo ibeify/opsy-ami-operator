@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.2...v1.9.3) (2024-09-16)
+
+
+### Bug Fixes
+
+* correct source for image adoption ([dd35db5](https://github.com/ibeify/opsy-ami-operator/commit/dd35db5b34d7bab9a9f5de22f0e97d4873b8eb2a))
+
 ## [1.9.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.1...v1.9.2) (2024-09-16)
 
 
