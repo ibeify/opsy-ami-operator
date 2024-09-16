@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.3...v1.10.0) (2024-09-16)
+
+
+### Features
+
+* work on docs ([a1b0fa2](https://github.com/ibeify/opsy-ami-operator/commit/a1b0fa268c4c2034b9bceff27ab53a0b4c7794d7))
+
 ## [1.9.3](https://github.com/ibeify/opsy-ami-operator/compare/v1.9.2...v1.9.3) (2024-09-16)
 
 
