@@ -52,10 +52,6 @@ func (r *ManagerPacker) Job(ctx context.Context, pb *amiv1alpha1.PackerBuilder) 
 		"-c",
 	}
 
-	if err := r.Get(ctx, types.NamespacedName{Name: pb.Name, Namespace: pb.Namespace}, pb); err != nil {
-		return nil, err
-	}
-
 	labels := map[string]string{
 		"brought-to-you-by": "opsy-the-ami-operator",
 		"job-name":          pb.Status.JobName,
@@ -184,7 +180,6 @@ func (r *ManagerPacker) Job(ctx context.Context, pb *amiv1alpha1.PackerBuilder) 
 						},
 					},
 
-					// Conditionally set ServiceAccountName
 					ServiceAccountName: func() string {
 						if pb.Spec.Builder.JobServiceAccountName != "" {
 							return pb.Spec.Builder.JobServiceAccountName

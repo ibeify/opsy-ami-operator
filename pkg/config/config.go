@@ -35,6 +35,7 @@ const (
 	SecurityGroupPattern  regexPattern = `Found\ssecurity\sgroup\s(sg-[a-f0-9]{17})`
 	WorkingDir                         = "ami-builder"
 	WorkingDirRoot                     = "workspace"
+	Finalizer                          = "ami.opsy.dev/finalizer"
 )
 
 type EntryKey string

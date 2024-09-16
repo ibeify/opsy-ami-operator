@@ -21,15 +21,16 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	configuration "github.com/ibeify/opsy-ami-operator/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, log logr.Logger) error {
 	if obj.GetDeletionTimestamp().IsZero() {
-		if !controllerutil.ContainsFinalizer(obj, "ami.opsy.dev/finalizer") {
-			controllerutil.AddFinalizer(obj, "ami.opsy.dev/finalizer")
-			log.Info(fmt.Sprintf("Add Finalizer %s", "ami.opsy.dev/finalizer"))
+		if !controllerutil.ContainsFinalizer(obj, configuration.Finalizer) {
+			controllerutil.AddFinalizer(obj, configuration.Finalizer)
+			log.Info(fmt.Sprintf("Add Finalizer %s", configuration.Finalizer))
 
 			err := r.Update(ctx, obj)
 			if err != nil {
@@ -38,9 +39,9 @@ func HandleFinalizer(ctx context.Context, obj client.Object, r client.Client, lo
 			}
 		}
 	} else {
-		if controllerutil.ContainsFinalizer(obj, "ami.opsy.dev/finalizer") {
-			controllerutil.RemoveFinalizer(obj, "ami.opsy.dev/finalizer")
-			log.Info(fmt.Sprintf("Remove Finalizer %s", "ami.opsy.dev/finalizer"))
+		if controllerutil.ContainsFinalizer(obj, configuration.Finalizer) {
+			controllerutil.RemoveFinalizer(obj, configuration.Finalizer)
+			log.Info(fmt.Sprintf("Remove Finalizer %s", configuration.Finalizer))
 
 			err := r.Update(ctx, obj)
 			if err != nil {

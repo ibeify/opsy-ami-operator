@@ -136,11 +136,9 @@ func (m *ManagerPacker) DeleteKeyPair(ctx context.Context, keyPairName string) e
 				return nil
 			}
 		}
-		// If it's a different error, return it
 		return err
 	}
 
-	// If we've reached here, the key pair exists, so delete it
 	_, err = ec2Client.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
 		KeyName: aws.String(keyPairName),
 	})
@@ -162,11 +160,9 @@ func (m *ManagerPacker) DeleteSecurityGroup(ctx context.Context, securityGroupID
 				return nil
 			}
 		}
-		// If it's a different error, return it
 		return err
 	}
 
-	// If we've reached here, the security group exists, so delete it
 	_, err = ec2Client.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
 		GroupId: aws.String(securityGroupID),
 	})
