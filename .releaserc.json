@@ -18,7 +18,12 @@
         "chartPath": "charts/opsy-ami-operator"
       }
     ],
-
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "make helm"
+      }
+    ],
     [
       "@semantic-release/git",
       {
