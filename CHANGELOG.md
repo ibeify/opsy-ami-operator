@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.11.0...v1.12.0) (2024-09-16)
+
+
+### Features
+
+* scanning on release occurs in release ([2d8f733](https://github.com/ibeify/opsy-ami-operator/commit/2d8f733b614b3485d16c7f54c217533358a15e27))
+
 # [1.11.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.10.0...v1.11.0) (2024-09-16)
 
 
