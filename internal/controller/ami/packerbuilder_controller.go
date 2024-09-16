@@ -83,14 +83,12 @@ type PackerBuilderReconciler struct {
 	Status       *status.Status
 }
 
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=packerbuilders,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=packerbuilders/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=packerbuilders/finalizers,verbs=update
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=packerbuilders/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=packerbuilders/finalizers,verbs=update
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=pods,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=jobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ami.opsy.dev,resources=pods/log,verbs=get;list;watch
+// +kubebuilder:rbac:groups=ami.refresh.ops,resources=packerbuilders,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ami.refresh.ops,resources=packerbuilders/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ami.refresh.ops,resources=packerbuilders/finalizers,verbs=update
+// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=pods/log,verbs=get;list;watch
 
 func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)

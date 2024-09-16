@@ -251,12 +251,12 @@ make install
 
 **HELM**
 ```bash
-> helm repo add opsy-ami-operator https://ibeify.github.io/opsy-ami-operator
-> helm repo update
-> helm upgrade --install opsy-ami opsy-ami-operator/opsy-ami-operator \
+❯ helm repo add opsy-ami-operator https://ibeify.github.io/opsy-ami-operator
+❯ helm repo update
+❯ helm upgrade --install opsy-ami opsy-ami-operator/opsy-ami-operator --version 1.7.0 \
   --namespace opsy --create-namespace \
-  --set image.repository=$IMAGE \
-  --set image.tag=$IMAGE_VERSION \
+  --set controllerManager.manager.image.repository=<repository> \
+  --set controllerManager.manager.image.tag=<version> \
   --set-json 'controllerManager.serviceAccount.annotations={"eks.amazonaws.com/role-arn": "arn:aws:iam::012345678910:role/eks-packer-builder"}'
 
 ```

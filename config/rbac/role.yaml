@@ -5,6 +5,26 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - ami.opsy.dev
   resources:
   - amirefreshers
@@ -31,19 +51,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - ami.opsy.dev
-  resources:
-  - jobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ami.opsy.dev
+  - ami.refresh.ops
   resources:
   - packerbuilders
   verbs:
@@ -55,13 +63,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ami.opsy.dev
+  - ami.refresh.ops
   resources:
   - packerbuilders/finalizers
   verbs:
   - update
 - apiGroups:
-  - ami.opsy.dev
+  - ami.refresh.ops
   resources:
   - packerbuilders/status
   verbs:
@@ -69,9 +77,9 @@ rules:
   - patch
   - update
 - apiGroups:
-  - ami.opsy.dev
+  - batch
   resources:
-  - pods
+  - jobs
   verbs:
   - create
   - delete
@@ -79,12 +87,4 @@ rules:
   - list
   - patch
   - update
-  - watch
-- apiGroups:
-  - ami.opsy.dev
-  resources:
-  - pods/log
-  verbs:
-  - get
-  - list
   - watch
