@@ -2,6 +2,20 @@ apiVersion: v1
 entries:
   opsy-ami-operator:
   - apiVersion: v2
+    appVersion: 1.12.2
+    created: "2024-09-16T23:29:30.773514665Z"
+    description: A Helm chart for The Opsy AMI Operator is designed to automate the
+      process of building AMIs using Packer and refreshing AMIs for EKS node groups.
+    digest: 0c4192ede179777836e8845cb8318980709db27b581756ace20f0f719195a2bc
+    maintainers:
+    - email: info@ibeify.io
+      name: Ibeify Operator
+    name: opsy-ami-operator
+    type: application
+    urls:
+    - https://github.com/ibeify/opsy-ami-operator/releases/download/helm-chart-1.12.2/opsy-ami-operator-1.12.2.tgz
+    version: 1.12.2
+  - apiVersion: v2
     appVersion: 1.12.1
     created: "2024-09-16T23:18:17.556640146Z"
     description: A Helm chart for The Opsy AMI Operator is designed to automate the
@@ -57,4 +71,4 @@ entries:
     urls:
     - https://github.com/ibeify/opsy-ami-operator/releases/download/helm-chart-1.10.0/opsy-ami-operator-1.10.0.tgz
     version: 1.10.0
-generated: "2024-09-16T23:18:17.556660364Z"
+generated: "2024-09-16T23:29:30.773544801Z"
