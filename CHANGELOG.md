@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.7.0...v1.7.1) (2024-09-16)
+
+
+### Bug Fixes
+
+* fix rbac for jobs ([46e6d1c](https://github.com/ibeify/opsy-ami-operator/commit/46e6d1c02a845f546aed3790dd8f93768f08b85f))
+
 # [1.7.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.6.1...v1.7.0) (2024-09-16)
 
 
