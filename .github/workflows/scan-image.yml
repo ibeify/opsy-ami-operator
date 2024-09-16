@@ -54,8 +54,3 @@ jobs:
         with:
           image-ref: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.REPOSITORY_NAME }}:${{ matrix.version }}"
           format: "table"
-        # env:
-        #   AWS_ACCESS_KEY_ID: ${{ steps.creds.outputs.aws-access-key-id }}
-        #   AWS_SECRET_ACCESS_KEY: ${{ steps.creds.outputs.aws-secret-access-key }}
-        #   AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        #   AWS_SESSION_TOKEN: ${{ steps.creds.outputs.aws-session-token }}
