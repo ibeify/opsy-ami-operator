@@ -11,6 +11,7 @@
     - [Status](#status)
     - [Command](#command)
     - [Notifications](#notifications)
+    - [Image Adoption](#image-adoption)
   - [Node Group AMI Instance Refreshing](#node-group-ami-instance-refreshing)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -140,20 +141,20 @@ The order of operation will always be `init`, `validate`, `build`. If only a bui
 
   ![Alt text](docs/assets/slack-notifier.png?raw=true "opsy-ami-operator")
 
-    ### Image Adoption
-    The controller is capable of finding previously created AMIs and adopting management of the AMI.This comes in handy if you completely remove the associated packerBuilder from the cluster. Since there can only be one, it looks for that Special AMI... This is enabled by default.
+  ### Image Adoption
+  The controller is capable of finding previously created AMIs and adopting management of the AMI.This comes in handy if you completely remove the associated packerBuilder from the cluster. Since there can only be one, it looks for that Special AMI... This is enabled by default.
 
-    - The AMI will need to have an `active` status tag
-    - The AMI should not be expired.
-    - In addition to above the AMI should have the following tags
-      ```bash
-        "brought-to-you-by":  "opsy-the-ami-operator",
-        "cluster-name":       "opsy-eks",
-        "created-by":         "name-of-your-crd-instance",
-        "packer-repo":        "repo-where-packer-code-was-sourced",
-        "packer-repo-branch": "branchable-branch",
-      ```
-      These tags have worked well thus far. If you find additional scrutiny is needed feel free to open a PR.
+  - The AMI will need to have an `active` status tag
+  - The AMI should not be expired.
+  - In addition to above the AMI should have the following tags
+    ```bash
+      "brought-to-you-by":  "opsy-the-ami-operator",
+      "cluster-name":       "opsy-eks",
+      "created-by":         "name-of-your-crd-instance",
+      "packer-repo":        "repo-where-packer-code-was-sourced",
+      "packer-repo-branch": "branchable-branch",
+    ```
+    These tags have worked well thus far. If you find additional scrutiny is needed feel free to open a PR.
 
 
 ## Node Group AMI Instance Refreshing
