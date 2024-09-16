@@ -1,0 +1,23 @@
+apiVersion: ami.opsy.dev/v1alpha1
+kind: AMIRefresher
+metadata:
+  labels:
+    app.kubernetes.io/name: amirefresher
+    app.kubernetes.io/instance: amirefresher-sample
+    app.kubernetes.io/part-of: opsy-ami-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: opsy-ami-operator
+  name: node-group-ami-refresh
+spec:
+  region: "us-west-2"
+  # ami: "ami-0d6c6ac554d62a745"
+  amiFilters:
+    - name: "name"
+      values: ["amazon-eks-node-al2023-x86_64-standard-1.30*"]
+    - name: "owner-id"
+      values: ["602401143452"]
+  clusterName: "ibeify-gitops"
+  expiresIn: "30d" # 1h, 1d, 1w, 1m, 3m, 6m, 1y
+  controllerTimer: "5m" # 1h, 1d, 1w, 1m, 3m, 6m, 1y
+  # exclude:
+  #   - "ingress-dev"

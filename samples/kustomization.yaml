@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- ami_v1alpha1_packerbuilder.yaml
+- ami_v1alpha1_amirefresher.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
