@@ -48,7 +48,8 @@ import (
 )
 
 var (
-	red     = "\033[31m"
+	red = "\033[31m"
+
 	yellow  = "\033[33m"
 	green   = "\033[32m"
 	cyan    = "\033[36m"
