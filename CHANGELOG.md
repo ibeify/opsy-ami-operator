@@ -1,3 +1,10 @@
+## [1.12.2](https://github.com/ibeify/opsy-ami-operator/compare/v1.12.1...v1.12.2) (2024-09-16)
+
+
+### Bug Fixes
+
+* run make helm when releasing ([6902344](https://github.com/ibeify/opsy-ami-operator/commit/690234480573473dbcc349b6273413c6f99a72f8))
+
 ## [1.12.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.12.0...v1.12.1) (2024-09-16)
 
 
