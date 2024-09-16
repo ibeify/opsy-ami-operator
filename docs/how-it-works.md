@@ -18,8 +18,8 @@ This component is managed by the `PackerBuilder` Custom Resource Definition (CRD
 
 - Automatically checks for the latest AMI using provided filters
 - Creates and monitors Kubernetes jobs for AMI building using Packer
-- Ensures node groups use the `status:active` AMI when under management
-- Uses Git-sync to pull Packer configurations from a repository
+- Ensures node groups use a `status:active` tagged AMI when under management
+- Uses Git-sync to pull Packer configurations from a public or private git repository
 - Supports notifications (currently Slack, with plans for SNS, SES, and Discord)
 - Can adopt previously created AMIs that meet specific criteria
 

@@ -1,7 +1,7 @@
 ## Using Ansible-Lock-Down for CIS lvl 2 Hardened AL2023
 
 ```yaml
-apiVersion: ami.refresh.ops/v1alpha1
+apiVersion: ami.opsy.dev/v1alpha1
 kind: PackerBuilder
 metadata:
   labels:
@@ -14,7 +14,7 @@ spec:
       values: ["602401143452"]
   clusterName: "opsy-gitops"
   timeOuts:
-    expiresIn: "10m"
+    expiresIn: "2h"
     controllerTimer: "2m"
   notifier:
     slack:
@@ -26,11 +26,10 @@ spec:
     secret: "git-sync"
   region: "us-west-2"
   builder:
-    repoURL: "https://github.com/ibeify/eks-node-group-ami-refresh"
+    repoURL: "https://github.com/ibeify/opsy-ami-operator"
     branch: "main"
     image: "hashicorp/packer:latest"
     dir: "packer/al2023-cis-lvl2"
-    secret: "aws-creds"
     commands:
       - subCommand: "build"
         workingDir: "packer/al2023-cis-lvl2"

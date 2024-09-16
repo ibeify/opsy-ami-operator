@@ -2,7 +2,7 @@
 ## Sourcing from Public Repository
 
 ```yaml
-apiVersion: ami.refresh.ops/v1alpha1
+apiVersion: ami.opsy.dev/v1alpha1
 kind: PackerBuilder
 metadata:
   labels:
@@ -15,27 +15,24 @@ spec:
   gitSync:
     image: "registry.k8s.io/git-sync/git-sync:v4.2.3"
     name: "git-sync"
-    secret: "git-sync"
   region: "us-west-2"
   builder:
-    repoURL:  "https://github.com/aws-samples/amazon-eks-custom-amis.git"
+    repoURL: "https://github.com/aws-samples/amazon-eks-custom-amis.git"
     branch: "main"
     image: "hashicorp/packer:latest"
-    dir: "packer"
-    secret: "aws-creds"
+    secret: "aws-creds" # Ensure If secrets not set IRSA is used
     commands:
-    - subCommand: "build"
-      variablesFile: "al2_amd64.pkrvars.hcl"
-      variables:
-        eks_version: "1.30"
-        region: "us-west-2"
-        # subnet_id: "subnet-01abc23"
-      workingDir: "."
-    - subCommand: "init"
-      args:
-        - "-upgrade"
-      workingDir: "."
-    - subCommand: "validate"
-      args:
-      workingDir: "."
+      - subCommand: "build"
+        variablesFile: "al2_amd64.pkrvars.hcl"
+        variables:
+          eks_version: "1.30"
+          region: "us-west-2"
+        workingDir: "."
+      - subCommand: "init"
+        args:
+          - "-upgrade"
+        workingDir: "."
+      - subCommand: "validate"
+        args:
+        workingDir: "."
 ```

@@ -1,10 +1,10 @@
-## Sourcing from a Private Repository
+## Basic Example
 ```yaml
-apiVersion: ami.refresh.ops/v1alpha1
+apiVersion: ami.opsy.dev/v1alpha1
 kind: PackerBuilder
 metadata:
   labels:
-  name: packer-builder-private
+  name: packer-builder-example
 spec:
   amiFilters:
     - name: "name"
