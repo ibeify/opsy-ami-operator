@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/ibeify/opsy-ami-operator/compare/v1.12.0...v1.12.1) (2024-09-16)
+
+
+### Bug Fixes
+
+* update helm chart version ([7482f28](https://github.com/ibeify/opsy-ami-operator/commit/7482f289ff98cbfa2979f30ea733d044a9af8e2a))
+
 # [1.12.0](https://github.com/ibeify/opsy-ami-operator/compare/v1.11.0...v1.12.0) (2024-09-16)
 
 
