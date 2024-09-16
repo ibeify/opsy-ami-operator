@@ -29,7 +29,8 @@
       {
         "assets": [
           "charts/opsy-ami-operator/Chart.yaml",
-          "CHANGELOG.md"
+          "CHANGELOG.md",
+          "charts/README.md"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
