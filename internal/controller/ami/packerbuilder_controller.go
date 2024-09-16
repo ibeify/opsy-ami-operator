@@ -129,15 +129,6 @@ func (r *PackerBuilderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	return r.catchRek(ctx, &pb, log)
 }
 
-func (r *PackerBuilderReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&amiv1alpha1.PackerBuilder{}).
-		Owns(&batchv1.Job{}).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
-		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
-		Complete(r)
-}
-
 func (r *PackerBuilderReconciler) catchRek(ctx context.Context, pb *amiv1alpha1.PackerBuilder, log logr.Logger) (ctrl.Result, error) {
 	pm := packermanager.New(ctx, r.Client, log, r.Scheme, r.Clientset.(*kubernetes.Clientset), pb)
 
@@ -685,4 +676,13 @@ func (r *PackerBuilderReconciler) watchJobCompletion(ctx context.Context, namesp
 
 func isEmpty(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}
+
+func (r *PackerBuilderReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&amiv1alpha1.PackerBuilder{}).
+		Owns(&batchv1.Job{}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
+		Complete(r)
 }
