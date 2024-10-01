@@ -1,0 +1,67 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: opsyami-operator
+build:
+  artifacts:
+    - image: controller
+      docker:
+        dockerfile: Dockerfile
+manifests:
+  kustomize:
+    paths:
+      - config/crd
+deploy:
+  helm:
+    releases:
+      - name: opsy-ami-operator
+        chartPath: charts/opsy-ami-operator
+        setValueTemplates:
+          controllerManager.manager.image.repository: "{{.IMAGE_REPO_controller}}"
+          controllerManager.manager.image.tag: "{{.IMAGE_TAG_controller}}@{{.IMAGE_DIGEST_controller}}"
+
+        setValues:
+          image.pullPolicy: "IfNotPresent"
+
+        version: 1.12.3
+profiles:
+  - name: default
+    manifests:
+      kustomize:
+        paths:
+          - config/default
+  - name: manager
+    manifests:
+      kustomize:
+        paths:
+          - config/manager
+  - name: manifests
+    manifests:
+      kustomize:
+        paths:
+          - config/manifests
+  - name: prometheus
+    manifests:
+      kustomize:
+        paths:
+          - config/prometheus
+  - name: rbac
+    manifests:
+      kustomize:
+        paths:
+          - config/rbac
+  - name: samples
+    manifests:
+      kustomize:
+        paths:
+          - config/samples
+  - name: scorecard
+    manifests:
+      kustomize:
+        paths:
+          - config/scorecard
+  - name: samples
+    manifests:
+      kustomize:
+        paths:
+          - docs/samples
