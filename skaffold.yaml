@@ -16,13 +16,13 @@ deploy:
     releases:
       - name: opsy-ami-operator
         chartPath: charts/opsy-ami-operator
+        namespace: opsy
         setValueTemplates:
           controllerManager.manager.image.repository: "{{.IMAGE_REPO_controller}}"
           controllerManager.manager.image.tag: "{{.IMAGE_TAG_controller}}@{{.IMAGE_DIGEST_controller}}"
-
         setValues:
           image.pullPolicy: "IfNotPresent"
-
+          controllerManager.kubeRbacProxy.enabled: false
         version: 1.12.3
 profiles:
   - name: default
