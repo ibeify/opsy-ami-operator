@@ -324,3 +324,6 @@ auto-readme:
         --api ollama \
         --model codellama \
 		--badge-style skills-light --image grey  --context-window 10000 --rate-limit 1000 --tree-depth 3
+
+skaffold:
+	skaffold dev
