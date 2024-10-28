@@ -5,8 +5,8 @@ go 1.23.0
 require (
 	github.com/aws/aws-sdk-go-v2 v1.32.2
 	github.com/aws/aws-sdk-go-v2/config v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.183.0
-	github.com/aws/aws-sdk-go-v2/service/eks v1.50.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.186.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/ses v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.2
 	github.com/aws/smithy-go v1.22.0
@@ -19,10 +19,10 @@ require (
 	github.com/slack-go/slack v0.15.0
 	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.31.1
-	k8s.io/apimachinery v0.31.1
-	k8s.io/client-go v0.31.1
-	sigs.k8s.io/controller-runtime v0.19.0
+	k8s.io/api v0.31.2
+	k8s.io/apimachinery v0.31.2
+	k8s.io/client-go v0.31.2
+	sigs.k8s.io/controller-runtime v0.19.1
 )
 
 require (
